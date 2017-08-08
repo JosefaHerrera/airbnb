@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
     $(".filtros-avanzados").hide();
     $(".boton-filtros").click(function(event){
           event.preventDefault();
@@ -10,6 +11,5 @@ $(document).ready(function(){
           event.preventDefault();
         $(".filtros-avanzados").hide();
     });
-
 })
 
