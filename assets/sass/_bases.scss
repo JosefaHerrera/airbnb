@@ -7,10 +7,31 @@
 }
 
 #buscador{
-	input{
-		border: 2px solid $grey;
+	.buscador__box{
+	    padding-top: 3%;
+	}
+	.buscador__box--btn{
+		background-color: $pink;
 	}
 }
+//plugin jquery 
+#ui-datepicker-div{
+	background: #fff;
+    padding: 1%;
+    color: $pink;
+}
+
+.ui-widget-header a{
+	color: $pink;
+}
+
+.ui-widget-header {
+    border: none;
+    background: #fff;
+    color: $pink;
+    font-weight: bold;
+}
+
 
 // HTML 2
 #resultado{
@@ -62,6 +83,7 @@
     background-color: white;
 	}
 }
+
 .page-footer .footer-copyright {
     overflow: hidden;
     min-height: 50px;
@@ -73,8 +95,8 @@
     padding: 10px 0;
     color: rgba(255,255,255,.8);
     background-color: white;
-}
-}
+	}
+
 
 
 
@@ -111,10 +133,8 @@
 		}
 	}
 }
-<<<<<<< HEAD
 
 
-}
 /*validacion*/
 .errores {
     color: black;
@@ -124,6 +144,3 @@
 
 }
 
-
-=======
->>>>>>> b336d2a51bab2b7d8ce05d2ba6a89cc3739e3bcf
