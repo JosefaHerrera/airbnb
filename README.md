@@ -21,10 +21,13 @@ El proyecto fue realizado con las siguientes dependencias NPM:
 
 * Solicitud de Apis:
 	- Google Maps
+	- Solicitar key de api google maps para poder utilizar 
 
 
 **Clonar repositorio**
 
-- Posicionado en nuestro proyecto hacer correr npm install para descargar e instalar todas las dependencias utilizadas. 
+- Posicionado en nuestro proyecto o carpeta hacer correr npm install para descargar e instalar todas las dependencias utilizadas. 
 - Correr gulp para que se realizen las tareas especificadas.
-- Solicitar key de api google maps para poder utilizar 
+
+**Disclaimer**
+* Por problemas con la rama master, creamos una rama backup que contiene todas las ramas finalizadas
