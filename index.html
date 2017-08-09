@@ -17,59 +17,68 @@
 		<div class="container buscador__box">
 			<div class="row">
 			    <form class="col s12">
-			      <div class="row">
-			        <div class="input-field col s3">
-			            <input id="donde" type="text" class="active tooltipped " data-position="bottom" data-delay="50" data-tooltip="Debes escribir un lugar">
-			            <label for="donde">Donde</label>
-			        </div>
-			        <div class="input-field col s3">
-			        	<div class="col s6">
-			        		<input id="llegada" type="text" class="active" placeholder="llegada">
+
+			      	<div class="row">
+			        	<div class="input-field col s3">
+			            	<input id="donde" type="text" class="active tooltipped" data-position="bottom" data-delay="50" data-tooltip="Debes escribir un lugar">
+			            	<label for="donde">Donde</label>
 			        	</div>
-			        	<div class="col s6">
-			        		<input id="salida" type="text" class="active" placeholder="salida">
-			        		<label for="salida">Cuándo</label>
-			        	</div> 			            
-			        </div>
-			        <div class="input-field col s3">
-			            <input id="cantidad" type="text" class="active tooltipped" data-position="bottom" data-delay="50" data-tooltip="Debes escribir número de personas">
-			            <label for="cantidad">Huéspedes</label>
-			        </div>
-			        <div class="input-field col s3">
-			        	<a class="btn buscador__box--btn" id="btn-datos">buscar</a>
-			        </div>
-			      </div>
+			        	<div class="input-field col s3">
+			        		<div class="col s6">
+			        			<input id="llegada" type="text" class="active" placeholder="llegada">
+			        		</div>
+			        		<div class="col s6">
+			        			<input id="salida" type="text" class="active" placeholder="salida">
+			        			<label for="salida">Cuándo</label>
+			        		</div> 			            
+			        	</div>
+			        	<div class="input-field col s3">
+			            	<input id="cantidad" type="text" class="active tooltipped" data-position="bottom" data-delay="50" data-tooltip="Debes escribir número de personas">
+			            	<input id="donde" type="text" class="validate">
+			        	</div>
+			        	<div class="input-field col s3">
+			            	<input id="cuando" type="text" class="validate">
+			            	<label for="cuando">Cuando</label>
+			        	</div>
+			        	<div class="input-field col s3">
+			            	<input id="cantidad" type="text" class="validate">
+			            	<label for="cantidad">Huéspedes</label>
+			        	</div>
+			        	<div class="input-field col s3">
+			        		<a href="resultado.html" class="btn buscador__box--btn" id="btn-datos">buscar</a>
+			        	</div>
+			      	</div>
+
 			    </form>
-		  </div>
+		  	</div>
 	  	</div>
 	</section>  
 
-
-
-<section id="experiencias">
-	<div class="container">
-		<div class="row">
-			<div class="col s12">
-				<div class="col s3 center-align">
-					<img class="responsive-img" src="assets/img/experiencia1.jpg">
-					<p><b>$2500</b> Surfing & culture · 5 días</p>
-				</div>
-				<div class="col s3 center-align">
-					<img class="responsive-img" src="assets/img/experiencia2.jpg">
-					<p><b>$160</b> Empowerment & entrepreneurship · 3 días</p>
-				</div>
-				<div class="col s3 center-align">
-					<img class="responsive-img" src="assets/img/experiencia4.jpg">
-					<p><b>$206</b> Crafting & tradition · 3 días</p>
-				</div>
-				<div class="col s3 center-align">
-					<img class="responsive-img" src="assets/img/experiencia3.jpg">
-					<p><b>$195</b> Travel & Culture · 3 días</p>
+	<section id="experiencias">
+		<div class="container">
+			<div class="row">
+				<div class="col s12">
+					<div class="col s3 center-align">
+						<img class="responsive-img" src="assets/img/experiencia1.jpg">
+						<p><b>$2500</b> Surfing & culture · 5 días</p>
+					</div>
+					<div class="col s3 center-align">
+						<img class="responsive-img" src="assets/img/experiencia2.jpg">
+						<p><b>$160</b> Empowerment & entrepreneurship · 3 días</p>
+					</div>
+					<div class="col s3 center-align">
+						<img class="responsive-img" src="assets/img/experiencia4.jpg">
+						<p><b>$206</b> Crafting & tradition · 3 días</p>
+					</div>
+					<div class="col s3 center-align">
+						<img class="responsive-img" src="assets/img/experiencia3.jpg">
+						<p><b>$195</b> Travel & Culture · 3 días</p>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-</section>
+	</section>
+
 
 <section id="footer">
 	        <footer class="page-footer">
@@ -138,7 +147,7 @@
 </section>
 	<!-- google Maps -->
 	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBm5nNhEsemgUcAci5Tj9_R4n4LHjdVbBA&callback=initMap&libraries=places" type="text/javascript"></script>
-	<script src="dist/js/script.js"></script>
 
+	<script src="dist/js/script.js"></script>
 </body>
 </html>
