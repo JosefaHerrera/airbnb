@@ -5,17 +5,18 @@ $(document).ready(function() {
 		datosHuesped();
 
 		if(datosDonde() && datosHuesped()){
-			window.location.href = "resultado.html";
-			var lugar = $("#donde").val();
-			var llegada = $("#llegada").val();
-			var salida = $("#salida").val();
-			var personas = $("#cantidad").val();
+				window.location.href = "resultado.html";
 
-			localStorage.setItem("lugar", lugar);
-			localStorage.setItem("llegada", llegada);
-			localStorage.setItem("salida", salida);
-			localStorage.setItem("personas", personas);
-		}
+				var lugar = $("#busqueda").val();
+				var llegada = $("#llegada").val();
+				var salida = $("#salida").val();
+				var personas = $("#cantidad").val();
+
+				localStorage.setItem("lugar", lugar);
+				localStorage.setItem("llegada", llegada);
+				localStorage.setItem("salida", salida);
+				localStorage.setItem("personas", personas);
+			}
 	});
 
 	//configuración de idioma del plugin

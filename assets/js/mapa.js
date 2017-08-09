@@ -20,3 +20,4 @@ function initMap(){
 		var autocomplete = new google.maps.places.Autocomplete(inputHome);
 		autocomplete.bindTo('bounds', map);
 }
+
