@@ -15,7 +15,6 @@ function validarDatos(){
 		$("#mensaje1").fadeOut();
 	}
 }
-
 $(document).ready(function(){
 
 	$(".filtros-avanzados").hide();
@@ -28,6 +27,5 @@ $(document).ready(function(){
   		event.preventDefault();
 		$(".filtros-avanzados").hide();
 	});
-
 })
 
