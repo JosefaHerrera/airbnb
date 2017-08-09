@@ -11,6 +11,7 @@ function initMap(){
       mapTypeIds: ['roadmap', 'terrain']
     }
 	});
+	//input búsqueda resultado
 	directionsDisplay.setMap(map);
 		var inicio = (document.getElementById('busqueda')); 
 		var autocompletar = new google.maps.places.Autocomplete(inicio);

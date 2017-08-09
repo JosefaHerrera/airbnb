@@ -15,21 +15,17 @@ function validarDatos(){
 		$("#mensaje1").fadeOut();
 	}
 }
-
 $(document).ready(function(){
+
 	$(".filtros-avanzados").hide();
 	$(".boton-filtro").click(function(event){
   		event.preventDefault();
 		//$(".filtros-avanzados").toggle("slow","display");
 		$(".filtros-avanzados").show();
-		
 	});
 	$(".boton-filtro-cerrar").click(function(event){
   		event.preventDefault();
 		$(".filtros-avanzados").hide();
 	});
-
-	
-	
 })
 
