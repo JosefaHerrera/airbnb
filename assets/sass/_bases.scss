@@ -66,38 +66,37 @@
 		color: $letters;
 	}
 }
-
-footer{
-	.container{
-		width: 90%;
-	}
-	.footer-select{
-		margin-top: 20px;
-	}
-	select{
-		color:$footer-select !important;
-		width: 70%;
-		margin-bottom: 8px;
-	}
-	.img-footer{
-		margin-right: 5px;
-	}
-	.footer-terminos{
-		.grey-text{
-			margin-right: 20px;
-		}
-	}
-	.icons{
-		.fa{
-			margin-right: 20px;
-		}		
-	}	
+ footer{
+  .container{
+    width: 90%;
+  }
+  .footer-select{
+    margin-top: 20px;
+  }
+  select{
+    color:$footer-select !important;
+    width: 70%;
+    margin-bottom: 8px;
+  }
+  .img-footer{
+    margin-right: 5px;
+  }
+  .footer-terminos{
+    .grey-text{
+      margin-right: 20px;
+    }
+  }
+  .icons{
+    .fa{
+      margin-right: 20px;
+    }   
+  } 
 }
 .footer-col{
-		h5{
-			font-size: 16px;
-			font-weight: bold;			
-		}		 
+    h5{
+      font-size: 16px;
+      font-weight: bold;      
+    }    
 }
 .filtros-avanzados{
 	.grey-text{
@@ -130,6 +129,10 @@ footer{
 		}
 	}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 12ce4fffeec550ff28ae342a7829b9c14d2448a1
 /*validacion*/
 .errores {
     color: black;
@@ -137,4 +140,7 @@ footer{
     font-size: 14px;
     margin-top: 1px;
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 12ce4fffeec550ff28ae342a7829b9c14d2448a1

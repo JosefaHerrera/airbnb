@@ -11,8 +11,12 @@ function initMap(){
       mapTypeIds: ['roadmap', 'terrain']
     }
 	});
+	//input búsqueda resultado
 	directionsDisplay.setMap(map);
-		var inicio = (document.getElementById('busqueda')); 
-		var autocompletar = new google.maps.places.Autocomplete(inicio);
-	autocomplete.bindTo('bounds', map);      
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
+		var inputHome = (document.getElementById('busqueda')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputHome);
+		autocomplete.bindTo('bounds', map);
 }
