@@ -20255,19 +20255,16 @@ if (jQuery) {
 
 $(document).ready(function(){
 	$(".filtros-avanzados").hide();
-	$(".boton-filtros").click(function(event){
+	$(".boton-filtro").click(function(event){
   		event.preventDefault();
 		//$(".filtros-avanzados").toggle("slow","display");
 		$(".filtros-avanzados").show();
-		
 	});
 	$(".boton-filtro-cerrar").click(function(event){
   		event.preventDefault();
 		$(".filtros-avanzados").hide();
 	});
 
-	
-	
 })
 
 
@@ -20284,11 +20281,14 @@ function initMap(){
       mapTypeIds: ['roadmap', 'terrain']
     }
 	});
+	//input búsqueda resultado
 	directionsDisplay.setMap(map);
-		var inicio = (document.getElementById('busqueda')); 
-		var autocompletar = new google.maps.places.Autocomplete(inicio);
-	autocomplete.bindTo('bounds', map);  
-	/*var input = (document.getElementById('busqueda'));
-	var autocomplete = new google.maps.places.Autocomplete(input);
-	autocomplete.bindTo('bounds', map); */      
+		var inputResultado = (document.getElementById('busqueda')); 
+		var autocompletar = new google.maps.places.Autocomplete(inputResultado);
+	autocomplete.bindTo('bounds', map); 
+	
+	directionsDisplay.setMap(map);
+		var inputHome = (document.getElementById('first_name')); 
+		var autocompletar = new google.maps.plafirst_nameces.Autocomplete(inputHome);
+	autocomplete.bindTo('bounds', map);      
 }

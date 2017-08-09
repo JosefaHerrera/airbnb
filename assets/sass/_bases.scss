@@ -50,16 +50,17 @@
 		.container{
 			color:#393E44;
 			
-	img{
-		width: 41px;
-	}
-      }
+			img{
+				width: 41px;
+			}
+        }
 	}
 	.footer-copyright{
     border-top: 1px solid black;
 	}
 	.page-footer, .pagination li.active {
     background-color: white;
+	}
 }
 .page-footer .footer-copyright {
     overflow: hidden;
@@ -75,7 +76,7 @@
 }
 .btn{
 	box-shadow: none;
-
+}
 .filtros-avanzados{
 	.grey-text{
 	color: $letters !important;
