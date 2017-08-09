@@ -36,19 +36,7 @@
                         <input type="text" class="timepicker" id="salidaDos"> 
                     </div>
                     <div class="col xl3 l3 m3 s12">
-                        <select class="browser-default">
-                            <option value="" disabled selected>Choose your option</option>
-                            <option value="1">1 huésped</option>
-                            <option value="2">2 huéspedes</option>
-                            <option value="3">3 huéspedes</option>
-                            <option value="3">4 huéspedes</option>
-                            <option value="3">5 huéspedes</option>
-                            <option value="3">6 huéspedes</option>
-                            <option value="3">7 huéspedes</option>
-                            <option value="3">8 huéspedes</option>
-                            <option value="3">9 huéspedes</option>
-                            <option value="3">10 huéspedes</option>
-                        </select>
+                         <input type="text" class="timepicker" id="cantidadDos"> 
                     </div>
                 </div>   
                 <div class="row">
@@ -123,7 +111,7 @@
                 <!-- Aquí va el mapa <3 -->
             </div>
         </div><!-- row principal -->
-    
+
         <!--filtros avanzados-->
         <div class="container filtros-avanzados">
             <hr>
@@ -293,7 +281,7 @@
                 <div class="col s12 offset-s6 btn-section">
                     <div class="col s6 btn-section">
                         <a class="waves-effect waves-light btn white btn__grey boton-filtro-cerrar">Cancelar</a>
-                        <a class="waves-effect waves-light btn btn__pink right">Aplicar filtros</a>
+                        <a class="waves-effect waves-light btn btn__pink right" id="filtros">Aplicar filtros</a>
                     </div>
                 </div>
             </div>
@@ -304,6 +292,16 @@
             <li class="active"><a href="#!">2</a></li>
             <li class="waves-effect"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
         </ul> 
+
+        <!-- realización de contenido dinamico -->
+
+        <div class="container">
+             <div id="muestraDatos">
+                  <!-- contenido dinamico -->
+             </div>
+        </div>
+        <!-- fin de contenido dinamico -->
+
         <!-- Footer -->
         <footer class="page-footer">
             <div class="container">
@@ -362,7 +360,7 @@
     
 	<script src="https://use.fontawesome.com/4154d90246.js" ></script>
 	<!-- google Maps -->
-	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBm5nNhEsemgUcAci5Tj9_R4n4LHjdVbBA&libraries=places&callback=initMap" type="text/javascript"></script> 
+	<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBm5nNhEsemgUcAci5Tj9_R4n4LHjdVbBA&libraries=places&callback=initMap" type="text/javascript"></script>
 	<script src="dist/js/script.js"></script>
 </body>
 </html>

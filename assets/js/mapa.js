@@ -14,5 +14,5 @@ function initMap(){
 	directionsDisplay.setMap(map);
 		var inicio = (document.getElementById('busqueda')); 
 		var autocompletar = new google.maps.places.Autocomplete(inicio);
-	autocomplete.bindTo('bounds', map);      
+		autocompletar.bindTo('bounds', map);      
 }
