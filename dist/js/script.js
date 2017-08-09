@@ -20253,6 +20253,23 @@ if (jQuery) {
   };
 })(jQuery);
 
+/*VALIDACIONES*/
+//Al momento de hacer click, se muentran las validaciones
+$(document).on("ready", inicio);
+function inicio(){
+	$("#bFiltro").on("click", validarDatos);
+}
+function validarDatos(){
+	var cb = $("input[type = 'checkbox']:checked");
+	var habitaciones = $("#habitaciones option:selected");
+
+	if (cb.length == 0) {
+		$("#mensaje1").fadeIn();
+		return false;
+	}else{
+		$("#mensaje1").fadeOut();
+	}
+}
 $(document).ready(function(){
 	$(".filtros-avanzados").hide();
 	$(".boton-filtro").click(function(event){
@@ -20283,12 +20300,18 @@ function initMap(){
 	});
 	//input búsqueda resultado
 	directionsDisplay.setMap(map);
-		var inputResultado = (document.getElementById('busqueda')); 
-		var autocompletar = new google.maps.places.Autocomplete(inputResultado);
-	autocomplete.bindTo('bounds', map); 
-	
-	directionsDisplay.setMap(map);
-		var inputHome = (document.getElementById('first_name')); 
-		var autocompletar = new google.maps.plafirst_nameces.Autocomplete(inputHome);
-	autocomplete.bindTo('bounds', map);      
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
+		var inputHome = (document.getElementById('busqueda')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputHome);
+		autocomplete.bindTo('bounds', map);    
+}
+function initMap(){
+	var directionsService = new google.maps.DirectionsService;
+	var directionsDisplay = new google.maps.DirectionsRenderer;
+
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
 }

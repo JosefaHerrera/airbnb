@@ -13,12 +13,10 @@ function initMap(){
 	});
 	//input búsqueda resultado
 	directionsDisplay.setMap(map);
-		var inputResultado = (document.getElementById('busqueda')); 
-		var autocompletar = new google.maps.places.Autocomplete(inputResultado);
-	autocomplete.bindTo('bounds', map); 
-	
-	directionsDisplay.setMap(map);
-		var inputHome = (document.getElementById('first_name')); 
-		var autocompletar = new google.maps.plafirst_nameces.Autocomplete(inputHome);
-	autocomplete.bindTo('bounds', map);      
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
+		var inputHome = (document.getElementById('busqueda')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputHome);
+		autocomplete.bindTo('bounds', map);
 }
