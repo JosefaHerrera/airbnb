@@ -20253,7 +20253,2523 @@ if (jQuery) {
   };
 })(jQuery);
 
+/*! jQuery UI - v1.11.4 - 2016-06-28
+* http://jqueryui.com
+* Includes: core.js, datepicker.js
+* Copyright jQuery Foundation and other contributors; Licensed MIT */
 
+(function( factory ) {
+	if ( typeof define === "function" && define.amd ) {
+
+		// AMD. Register as an anonymous module.
+		define([ "jquery" ], factory );
+	} else {
+
+		// Browser globals
+		factory( jQuery );
+	}
+}(function( $ ) {
+/*!
+ * jQuery UI Core 1.11.4
+ * http://jqueryui.com
+ *
+ * Copyright jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/category/ui-core/
+ */
+
+
+// $.ui might exist from components with no dependencies, e.g., $.ui.position
+$.ui = $.ui || {};
+
+$.extend( $.ui, {
+	version: "1.11.4",
+
+	keyCode: {
+		BACKSPACE: 8,
+		COMMA: 188,
+		DELETE: 46,
+		DOWN: 40,
+		END: 35,
+		ENTER: 13,
+		ESCAPE: 27,
+		HOME: 36,
+		LEFT: 37,
+		PAGE_DOWN: 34,
+		PAGE_UP: 33,
+		PERIOD: 190,
+		RIGHT: 39,
+		SPACE: 32,
+		TAB: 9,
+		UP: 38
+	}
+});
+
+// plugins
+$.fn.extend({
+	scrollParent: function( includeHidden ) {
+		var position = this.css( "position" ),
+			excludeStaticParent = position === "absolute",
+			overflowRegex = includeHidden ? /(auto|scroll|hidden)/ : /(auto|scroll)/,
+			scrollParent = this.parents().filter( function() {
+				var parent = $( this );
+				if ( excludeStaticParent && parent.css( "position" ) === "static" ) {
+					return false;
+				}
+				return overflowRegex.test( parent.css( "overflow" ) + parent.css( "overflow-y" ) + parent.css( "overflow-x" ) );
+			}).eq( 0 );
+
+		return position === "fixed" || !scrollParent.length ? $( this[ 0 ].ownerDocument || document ) : scrollParent;
+	},
+
+	uniqueId: (function() {
+		var uuid = 0;
+
+		return function() {
+			return this.each(function() {
+				if ( !this.id ) {
+					this.id = "ui-id-" + ( ++uuid );
+				}
+			});
+		};
+	})(),
+
+	removeUniqueId: function() {
+		return this.each(function() {
+			if ( /^ui-id-\d+$/.test( this.id ) ) {
+				$( this ).removeAttr( "id" );
+			}
+		});
+	}
+});
+
+// selectors
+function focusable( element, isTabIndexNotNaN ) {
+	var map, mapName, img,
+		nodeName = element.nodeName.toLowerCase();
+	if ( "area" === nodeName ) {
+		map = element.parentNode;
+		mapName = map.name;
+		if ( !element.href || !mapName || map.nodeName.toLowerCase() !== "map" ) {
+			return false;
+		}
+		img = $( "img[usemap='#" + mapName + "']" )[ 0 ];
+		return !!img && visible( img );
+	}
+	return ( /^(input|select|textarea|button|object)$/.test( nodeName ) ?
+		!element.disabled :
+		"a" === nodeName ?
+			element.href || isTabIndexNotNaN :
+			isTabIndexNotNaN) &&
+		// the element and all of its ancestors must be visible
+		visible( element );
+}
+
+function visible( element ) {
+	return $.expr.filters.visible( element ) &&
+		!$( element ).parents().addBack().filter(function() {
+			return $.css( this, "visibility" ) === "hidden";
+		}).length;
+}
+
+$.extend( $.expr[ ":" ], {
+	data: $.expr.createPseudo ?
+		$.expr.createPseudo(function( dataName ) {
+			return function( elem ) {
+				return !!$.data( elem, dataName );
+			};
+		}) :
+		// support: jQuery <1.8
+		function( elem, i, match ) {
+			return !!$.data( elem, match[ 3 ] );
+		},
+
+	focusable: function( element ) {
+		return focusable( element, !isNaN( $.attr( element, "tabindex" ) ) );
+	},
+
+	tabbable: function( element ) {
+		var tabIndex = $.attr( element, "tabindex" ),
+			isTabIndexNaN = isNaN( tabIndex );
+		return ( isTabIndexNaN || tabIndex >= 0 ) && focusable( element, !isTabIndexNaN );
+	}
+});
+
+// support: jQuery <1.8
+if ( !$( "<a>" ).outerWidth( 1 ).jquery ) {
+	$.each( [ "Width", "Height" ], function( i, name ) {
+		var side = name === "Width" ? [ "Left", "Right" ] : [ "Top", "Bottom" ],
+			type = name.toLowerCase(),
+			orig = {
+				innerWidth: $.fn.innerWidth,
+				innerHeight: $.fn.innerHeight,
+				outerWidth: $.fn.outerWidth,
+				outerHeight: $.fn.outerHeight
+			};
+
+		function reduce( elem, size, border, margin ) {
+			$.each( side, function() {
+				size -= parseFloat( $.css( elem, "padding" + this ) ) || 0;
+				if ( border ) {
+					size -= parseFloat( $.css( elem, "border" + this + "Width" ) ) || 0;
+				}
+				if ( margin ) {
+					size -= parseFloat( $.css( elem, "margin" + this ) ) || 0;
+				}
+			});
+			return size;
+		}
+
+		$.fn[ "inner" + name ] = function( size ) {
+			if ( size === undefined ) {
+				return orig[ "inner" + name ].call( this );
+			}
+
+			return this.each(function() {
+				$( this ).css( type, reduce( this, size ) + "px" );
+			});
+		};
+
+		$.fn[ "outer" + name] = function( size, margin ) {
+			if ( typeof size !== "number" ) {
+				return orig[ "outer" + name ].call( this, size );
+			}
+
+			return this.each(function() {
+				$( this).css( type, reduce( this, size, true, margin ) + "px" );
+			});
+		};
+	});
+}
+
+// support: jQuery <1.8
+if ( !$.fn.addBack ) {
+	$.fn.addBack = function( selector ) {
+		return this.add( selector == null ?
+			this.prevObject : this.prevObject.filter( selector )
+		);
+	};
+}
+
+// support: jQuery 1.6.1, 1.6.2 (http://bugs.jquery.com/ticket/9413)
+if ( $( "<a>" ).data( "a-b", "a" ).removeData( "a-b" ).data( "a-b" ) ) {
+	$.fn.removeData = (function( removeData ) {
+		return function( key ) {
+			if ( arguments.length ) {
+				return removeData.call( this, $.camelCase( key ) );
+			} else {
+				return removeData.call( this );
+			}
+		};
+	})( $.fn.removeData );
+}
+
+// deprecated
+$.ui.ie = !!/msie [\w.]+/.exec( navigator.userAgent.toLowerCase() );
+
+$.fn.extend({
+	focus: (function( orig ) {
+		return function( delay, fn ) {
+			return typeof delay === "number" ?
+				this.each(function() {
+					var elem = this;
+					setTimeout(function() {
+						$( elem ).focus();
+						if ( fn ) {
+							fn.call( elem );
+						}
+					}, delay );
+				}) :
+				orig.apply( this, arguments );
+		};
+	})( $.fn.focus ),
+
+	disableSelection: (function() {
+		var eventType = "onselectstart" in document.createElement( "div" ) ?
+			"selectstart" :
+			"mousedown";
+
+		return function() {
+			return this.bind( eventType + ".ui-disableSelection", function( event ) {
+				event.preventDefault();
+			});
+		};
+	})(),
+
+	enableSelection: function() {
+		return this.unbind( ".ui-disableSelection" );
+	},
+
+	zIndex: function( zIndex ) {
+		if ( zIndex !== undefined ) {
+			return this.css( "zIndex", zIndex );
+		}
+
+		if ( this.length ) {
+			var elem = $( this[ 0 ] ), position, value;
+			while ( elem.length && elem[ 0 ] !== document ) {
+				// Ignore z-index if position is set to a value where z-index is ignored by the browser
+				// This makes behavior of this function consistent across browsers
+				// WebKit always returns auto if the element is positioned
+				position = elem.css( "position" );
+				if ( position === "absolute" || position === "relative" || position === "fixed" ) {
+					// IE returns 0 when zIndex is not specified
+					// other browsers return a string
+					// we ignore the case of nested elements with an explicit value of 0
+					// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
+					value = parseInt( elem.css( "zIndex" ), 10 );
+					if ( !isNaN( value ) && value !== 0 ) {
+						return value;
+					}
+				}
+				elem = elem.parent();
+			}
+		}
+
+		return 0;
+	}
+});
+
+// $.ui.plugin is deprecated. Use $.widget() extensions instead.
+$.ui.plugin = {
+	add: function( module, option, set ) {
+		var i,
+			proto = $.ui[ module ].prototype;
+		for ( i in set ) {
+			proto.plugins[ i ] = proto.plugins[ i ] || [];
+			proto.plugins[ i ].push( [ option, set[ i ] ] );
+		}
+	},
+	call: function( instance, name, args, allowDisconnected ) {
+		var i,
+			set = instance.plugins[ name ];
+
+		if ( !set ) {
+			return;
+		}
+
+		if ( !allowDisconnected && ( !instance.element[ 0 ].parentNode || instance.element[ 0 ].parentNode.nodeType === 11 ) ) {
+			return;
+		}
+
+		for ( i = 0; i < set.length; i++ ) {
+			if ( instance.options[ set[ i ][ 0 ] ] ) {
+				set[ i ][ 1 ].apply( instance.element, args );
+			}
+		}
+	}
+};
+
+
+/*!
+ * jQuery UI Datepicker 1.11.4
+ * http://jqueryui.com
+ *
+ * Copyright jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/datepicker/
+ */
+
+
+$.extend($.ui, { datepicker: { version: "1.11.4" } });
+
+var datepicker_instActive;
+
+function datepicker_getZindex( elem ) {
+	var position, value;
+	while ( elem.length && elem[ 0 ] !== document ) {
+		// Ignore z-index if position is set to a value where z-index is ignored by the browser
+		// This makes behavior of this function consistent across browsers
+		// WebKit always returns auto if the element is positioned
+		position = elem.css( "position" );
+		if ( position === "absolute" || position === "relative" || position === "fixed" ) {
+			// IE returns 0 when zIndex is not specified
+			// other browsers return a string
+			// we ignore the case of nested elements with an explicit value of 0
+			// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
+			value = parseInt( elem.css( "zIndex" ), 10 );
+			if ( !isNaN( value ) && value !== 0 ) {
+				return value;
+			}
+		}
+		elem = elem.parent();
+	}
+
+	return 0;
+}
+/* Date picker manager.
+   Use the singleton instance of this class, $.datepicker, to interact with the date picker.
+   Settings for (groups of) date pickers are maintained in an instance object,
+   allowing multiple different settings on the same page. */
+
+function Datepicker() {
+	this._curInst = null; // The current instance in use
+	this._keyEvent = false; // If the last event was a key event
+	this._disabledInputs = []; // List of date picker inputs that have been disabled
+	this._datepickerShowing = false; // True if the popup picker is showing , false if not
+	this._inDialog = false; // True if showing within a "dialog", false if not
+	this._mainDivId = "ui-datepicker-div"; // The ID of the main datepicker division
+	this._inlineClass = "ui-datepicker-inline"; // The name of the inline marker class
+	this._appendClass = "ui-datepicker-append"; // The name of the append marker class
+	this._triggerClass = "ui-datepicker-trigger"; // The name of the trigger marker class
+	this._dialogClass = "ui-datepicker-dialog"; // The name of the dialog marker class
+	this._disableClass = "ui-datepicker-disabled"; // The name of the disabled covering marker class
+	this._unselectableClass = "ui-datepicker-unselectable"; // The name of the unselectable cell marker class
+	this._currentClass = "ui-datepicker-current-day"; // The name of the current day marker class
+	this._dayOverClass = "ui-datepicker-days-cell-over"; // The name of the day hover marker class
+	this.regional = []; // Available regional settings, indexed by language code
+	this.regional[""] = { // Default regional settings
+		closeText: "Done", // Display text for close link
+		prevText: "Prev", // Display text for previous month link
+		nextText: "Next", // Display text for next month link
+		currentText: "Today", // Display text for current month link
+		monthNames: ["January","February","March","April","May","June",
+			"July","August","September","October","November","December"], // Names of months for drop-down and formatting
+		monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], // For formatting
+		dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], // For formatting
+		dayNamesShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], // For formatting
+		dayNamesMin: ["Su","Mo","Tu","We","Th","Fr","Sa"], // Column headings for days starting at Sunday
+		weekHeader: "Wk", // Column header for week of the year
+		dateFormat: "mm/dd/yy", // See format options on parseDate
+		firstDay: 0, // The first day of the week, Sun = 0, Mon = 1, ...
+		isRTL: false, // True if right-to-left language, false if left-to-right
+		showMonthAfterYear: false, // True if the year select precedes month, false for month then year
+		yearSuffix: "" // Additional text to append to the year in the month headers
+	};
+	this._defaults = { // Global defaults for all the date picker instances
+		showOn: "focus", // "focus" for popup on focus,
+			// "button" for trigger button, or "both" for either
+		showAnim: "fadeIn", // Name of jQuery animation for popup
+		showOptions: {}, // Options for enhanced animations
+		defaultDate: null, // Used when field is blank: actual date,
+			// +/-number for offset from today, null for today
+		appendText: "", // Display text following the input box, e.g. showing the format
+		buttonText: "...", // Text for trigger button
+		buttonImage: "", // URL for trigger button image
+		buttonImageOnly: false, // True if the image appears alone, false if it appears on a button
+		hideIfNoPrevNext: false, // True to hide next/previous month links
+			// if not applicable, false to just disable them
+		navigationAsDateFormat: false, // True if date formatting applied to prev/today/next links
+		gotoCurrent: false, // True if today link goes back to current selection instead
+		changeMonth: false, // True if month can be selected directly, false if only prev/next
+		changeYear: false, // True if year can be selected directly, false if only prev/next
+		yearRange: "c-10:c+10", // Range of years to display in drop-down,
+			// either relative to today's year (-nn:+nn), relative to currently displayed year
+			// (c-nn:c+nn), absolute (nnnn:nnnn), or a combination of the above (nnnn:-n)
+		showOtherMonths: false, // True to show dates in other months, false to leave blank
+		selectOtherMonths: false, // True to allow selection of dates in other months, false for unselectable
+		showWeek: false, // True to show week of the year, false to not show it
+		calculateWeek: this.iso8601Week, // How to calculate the week of the year,
+			// takes a Date and returns the number of the week for it
+		shortYearCutoff: "+10", // Short year values < this are in the current century,
+			// > this are in the previous century,
+			// string value starting with "+" for current year + value
+		minDate: null, // The earliest selectable date, or null for no limit
+		maxDate: null, // The latest selectable date, or null for no limit
+		duration: "fast", // Duration of display/closure
+		beforeShowDay: null, // Function that takes a date and returns an array with
+			// [0] = true if selectable, false if not, [1] = custom CSS class name(s) or "",
+			// [2] = cell title (optional), e.g. $.datepicker.noWeekends
+		beforeShow: null, // Function that takes an input field and
+			// returns a set of custom settings for the date picker
+		onSelect: null, // Define a callback function when a date is selected
+		onChangeMonthYear: null, // Define a callback function when the month or year is changed
+		onClose: null, // Define a callback function when the datepicker is closed
+		numberOfMonths: 1, // Number of months to show at a time
+		showCurrentAtPos: 0, // The position in multipe months at which to show the current month (starting at 0)
+		stepMonths: 1, // Number of months to step back/forward
+		stepBigMonths: 12, // Number of months to step back/forward for the big links
+		altField: "", // Selector for an alternate field to store selected dates into
+		altFormat: "", // The date format to use for the alternate field
+		constrainInput: true, // The input is constrained by the current date format
+		showButtonPanel: false, // True to show button panel, false to not show it
+		autoSize: false, // True to size the input for the date format, false to leave as is
+		disabled: false // The initial disabled state
+	};
+	$.extend(this._defaults, this.regional[""]);
+	this.regional.en = $.extend( true, {}, this.regional[ "" ]);
+	this.regional[ "en-US" ] = $.extend( true, {}, this.regional.en );
+	this.dpDiv = datepicker_bindHover($("<div id='" + this._mainDivId + "' class='ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'></div>"));
+}
+
+$.extend(Datepicker.prototype, {
+	/* Class name added to elements to indicate already configured with a date picker. */
+	markerClassName: "hasDatepicker",
+
+	//Keep track of the maximum number of rows displayed (see #7043)
+	maxRows: 4,
+
+	// TODO rename to "widget" when switching to widget factory
+	_widgetDatepicker: function() {
+		return this.dpDiv;
+	},
+
+	/* Override the default settings for all instances of the date picker.
+	 * @param  settings  object - the new settings to use as defaults (anonymous object)
+	 * @return the manager object
+	 */
+	setDefaults: function(settings) {
+		datepicker_extendRemove(this._defaults, settings || {});
+		return this;
+	},
+
+	/* Attach the date picker to a jQuery selection.
+	 * @param  target	element - the target input field or division or span
+	 * @param  settings  object - the new settings to use for this date picker instance (anonymous)
+	 */
+	_attachDatepicker: function(target, settings) {
+		var nodeName, inline, inst;
+		nodeName = target.nodeName.toLowerCase();
+		inline = (nodeName === "div" || nodeName === "span");
+		if (!target.id) {
+			this.uuid += 1;
+			target.id = "dp" + this.uuid;
+		}
+		inst = this._newInst($(target), inline);
+		inst.settings = $.extend({}, settings || {});
+		if (nodeName === "input") {
+			this._connectDatepicker(target, inst);
+		} else if (inline) {
+			this._inlineDatepicker(target, inst);
+		}
+	},
+
+	/* Create a new instance object. */
+	_newInst: function(target, inline) {
+		var id = target[0].id.replace(/([^A-Za-z0-9_\-])/g, "\\\\$1"); // escape jQuery meta chars
+		return {id: id, input: target, // associated target
+			selectedDay: 0, selectedMonth: 0, selectedYear: 0, // current selection
+			drawMonth: 0, drawYear: 0, // month being drawn
+			inline: inline, // is datepicker inline or not
+			dpDiv: (!inline ? this.dpDiv : // presentation div
+			datepicker_bindHover($("<div class='" + this._inlineClass + " ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all'></div>")))};
+	},
+
+	/* Attach the date picker to an input field. */
+	_connectDatepicker: function(target, inst) {
+		var input = $(target);
+		inst.append = $([]);
+		inst.trigger = $([]);
+		if (input.hasClass(this.markerClassName)) {
+			return;
+		}
+		this._attachments(input, inst);
+		input.addClass(this.markerClassName).keydown(this._doKeyDown).
+			keypress(this._doKeyPress).keyup(this._doKeyUp);
+		this._autoSize(inst);
+		$.data(target, "datepicker", inst);
+		//If disabled option is true, disable the datepicker once it has been attached to the input (see ticket #5665)
+		if( inst.settings.disabled ) {
+			this._disableDatepicker( target );
+		}
+	},
+
+	/* Make attachments based on settings. */
+	_attachments: function(input, inst) {
+		var showOn, buttonText, buttonImage,
+			appendText = this._get(inst, "appendText"),
+			isRTL = this._get(inst, "isRTL");
+
+		if (inst.append) {
+			inst.append.remove();
+		}
+		if (appendText) {
+			inst.append = $("<span class='" + this._appendClass + "'>" + appendText + "</span>");
+			input[isRTL ? "before" : "after"](inst.append);
+		}
+
+		input.unbind("focus", this._showDatepicker);
+
+		if (inst.trigger) {
+			inst.trigger.remove();
+		}
+
+		showOn = this._get(inst, "showOn");
+		if (showOn === "focus" || showOn === "both") { // pop-up date picker when in the marked field
+			input.focus(this._showDatepicker);
+		}
+		if (showOn === "button" || showOn === "both") { // pop-up date picker when button clicked
+			buttonText = this._get(inst, "buttonText");
+			buttonImage = this._get(inst, "buttonImage");
+			inst.trigger = $(this._get(inst, "buttonImageOnly") ?
+				$("<img/>").addClass(this._triggerClass).
+					attr({ src: buttonImage, alt: buttonText, title: buttonText }) :
+				$("<button type='button'></button>").addClass(this._triggerClass).
+					html(!buttonImage ? buttonText : $("<img/>").attr(
+					{ src:buttonImage, alt:buttonText, title:buttonText })));
+			input[isRTL ? "before" : "after"](inst.trigger);
+			inst.trigger.click(function() {
+				if ($.datepicker._datepickerShowing && $.datepicker._lastInput === input[0]) {
+					$.datepicker._hideDatepicker();
+				} else if ($.datepicker._datepickerShowing && $.datepicker._lastInput !== input[0]) {
+					$.datepicker._hideDatepicker();
+					$.datepicker._showDatepicker(input[0]);
+				} else {
+					$.datepicker._showDatepicker(input[0]);
+				}
+				return false;
+			});
+		}
+	},
+
+	/* Apply the maximum length for the date format. */
+	_autoSize: function(inst) {
+		if (this._get(inst, "autoSize") && !inst.inline) {
+			var findMax, max, maxI, i,
+				date = new Date(2009, 12 - 1, 20), // Ensure double digits
+				dateFormat = this._get(inst, "dateFormat");
+
+			if (dateFormat.match(/[DM]/)) {
+				findMax = function(names) {
+					max = 0;
+					maxI = 0;
+					for (i = 0; i < names.length; i++) {
+						if (names[i].length > max) {
+							max = names[i].length;
+							maxI = i;
+						}
+					}
+					return maxI;
+				};
+				date.setMonth(findMax(this._get(inst, (dateFormat.match(/MM/) ?
+					"monthNames" : "monthNamesShort"))));
+				date.setDate(findMax(this._get(inst, (dateFormat.match(/DD/) ?
+					"dayNames" : "dayNamesShort"))) + 20 - date.getDay());
+			}
+			inst.input.attr("size", this._formatDate(inst, date).length);
+		}
+	},
+
+	/* Attach an inline date picker to a div. */
+	_inlineDatepicker: function(target, inst) {
+		var divSpan = $(target);
+		if (divSpan.hasClass(this.markerClassName)) {
+			return;
+		}
+		divSpan.addClass(this.markerClassName).append(inst.dpDiv);
+		$.data(target, "datepicker", inst);
+		this._setDate(inst, this._getDefaultDate(inst), true);
+		this._updateDatepicker(inst);
+		this._updateAlternate(inst);
+		//If disabled option is true, disable the datepicker before showing it (see ticket #5665)
+		if( inst.settings.disabled ) {
+			this._disableDatepicker( target );
+		}
+		// Set display:block in place of inst.dpDiv.show() which won't work on disconnected elements
+		// http://bugs.jqueryui.com/ticket/7552 - A Datepicker created on a detached div has zero height
+		inst.dpDiv.css( "display", "block" );
+	},
+
+	/* Pop-up the date picker in a "dialog" box.
+	 * @param  input element - ignored
+	 * @param  date	string or Date - the initial date to display
+	 * @param  onSelect  function - the function to call when a date is selected
+	 * @param  settings  object - update the dialog date picker instance's settings (anonymous object)
+	 * @param  pos int[2] - coordinates for the dialog's position within the screen or
+	 *					event - with x/y coordinates or
+	 *					leave empty for default (screen centre)
+	 * @return the manager object
+	 */
+	_dialogDatepicker: function(input, date, onSelect, settings, pos) {
+		var id, browserWidth, browserHeight, scrollX, scrollY,
+			inst = this._dialogInst; // internal instance
+
+		if (!inst) {
+			this.uuid += 1;
+			id = "dp" + this.uuid;
+			this._dialogInput = $("<input type='text' id='" + id +
+				"' style='position: absolute; top: -100px; width: 0px;'/>");
+			this._dialogInput.keydown(this._doKeyDown);
+			$("body").append(this._dialogInput);
+			inst = this._dialogInst = this._newInst(this._dialogInput, false);
+			inst.settings = {};
+			$.data(this._dialogInput[0], "datepicker", inst);
+		}
+		datepicker_extendRemove(inst.settings, settings || {});
+		date = (date && date.constructor === Date ? this._formatDate(inst, date) : date);
+		this._dialogInput.val(date);
+
+		this._pos = (pos ? (pos.length ? pos : [pos.pageX, pos.pageY]) : null);
+		if (!this._pos) {
+			browserWidth = document.documentElement.clientWidth;
+			browserHeight = document.documentElement.clientHeight;
+			scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+			scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+			this._pos = // should use actual width/height below
+				[(browserWidth / 2) - 100 + scrollX, (browserHeight / 2) - 150 + scrollY];
+		}
+
+		// move input on screen for focus, but hidden behind dialog
+		this._dialogInput.css("left", (this._pos[0] + 20) + "px").css("top", this._pos[1] + "px");
+		inst.settings.onSelect = onSelect;
+		this._inDialog = true;
+		this.dpDiv.addClass(this._dialogClass);
+		this._showDatepicker(this._dialogInput[0]);
+		if ($.blockUI) {
+			$.blockUI(this.dpDiv);
+		}
+		$.data(this._dialogInput[0], "datepicker", inst);
+		return this;
+	},
+
+	/* Detach a datepicker from its control.
+	 * @param  target	element - the target input field or division or span
+	 */
+	_destroyDatepicker: function(target) {
+		var nodeName,
+			$target = $(target),
+			inst = $.data(target, "datepicker");
+
+		if (!$target.hasClass(this.markerClassName)) {
+			return;
+		}
+
+		nodeName = target.nodeName.toLowerCase();
+		$.removeData(target, "datepicker");
+		if (nodeName === "input") {
+			inst.append.remove();
+			inst.trigger.remove();
+			$target.removeClass(this.markerClassName).
+				unbind("focus", this._showDatepicker).
+				unbind("keydown", this._doKeyDown).
+				unbind("keypress", this._doKeyPress).
+				unbind("keyup", this._doKeyUp);
+		} else if (nodeName === "div" || nodeName === "span") {
+			$target.removeClass(this.markerClassName).empty();
+		}
+
+		if ( datepicker_instActive === inst ) {
+			datepicker_instActive = null;
+		}
+	},
+
+	/* Enable the date picker to a jQuery selection.
+	 * @param  target	element - the target input field or division or span
+	 */
+	_enableDatepicker: function(target) {
+		var nodeName, inline,
+			$target = $(target),
+			inst = $.data(target, "datepicker");
+
+		if (!$target.hasClass(this.markerClassName)) {
+			return;
+		}
+
+		nodeName = target.nodeName.toLowerCase();
+		if (nodeName === "input") {
+			target.disabled = false;
+			inst.trigger.filter("button").
+				each(function() { this.disabled = false; }).end().
+				filter("img").css({opacity: "1.0", cursor: ""});
+		} else if (nodeName === "div" || nodeName === "span") {
+			inline = $target.children("." + this._inlineClass);
+			inline.children().removeClass("ui-state-disabled");
+			inline.find("select.ui-datepicker-month, select.ui-datepicker-year").
+				prop("disabled", false);
+		}
+		this._disabledInputs = $.map(this._disabledInputs,
+			function(value) { return (value === target ? null : value); }); // delete entry
+	},
+
+	/* Disable the date picker to a jQuery selection.
+	 * @param  target	element - the target input field or division or span
+	 */
+	_disableDatepicker: function(target) {
+		var nodeName, inline,
+			$target = $(target),
+			inst = $.data(target, "datepicker");
+
+		if (!$target.hasClass(this.markerClassName)) {
+			return;
+		}
+
+		nodeName = target.nodeName.toLowerCase();
+		if (nodeName === "input") {
+			target.disabled = true;
+			inst.trigger.filter("button").
+				each(function() { this.disabled = true; }).end().
+				filter("img").css({opacity: "0.5", cursor: "default"});
+		} else if (nodeName === "div" || nodeName === "span") {
+			inline = $target.children("." + this._inlineClass);
+			inline.children().addClass("ui-state-disabled");
+			inline.find("select.ui-datepicker-month, select.ui-datepicker-year").
+				prop("disabled", true);
+		}
+		this._disabledInputs = $.map(this._disabledInputs,
+			function(value) { return (value === target ? null : value); }); // delete entry
+		this._disabledInputs[this._disabledInputs.length] = target;
+	},
+
+	/* Is the first field in a jQuery collection disabled as a datepicker?
+	 * @param  target	element - the target input field or division or span
+	 * @return boolean - true if disabled, false if enabled
+	 */
+	_isDisabledDatepicker: function(target) {
+		if (!target) {
+			return false;
+		}
+		for (var i = 0; i < this._disabledInputs.length; i++) {
+			if (this._disabledInputs[i] === target) {
+				return true;
+			}
+		}
+		return false;
+	},
+
+	/* Retrieve the instance data for the target control.
+	 * @param  target  element - the target input field or division or span
+	 * @return  object - the associated instance data
+	 * @throws  error if a jQuery problem getting data
+	 */
+	_getInst: function(target) {
+		try {
+			return $.data(target, "datepicker");
+		}
+		catch (err) {
+			throw "Missing instance data for this datepicker";
+		}
+	},
+
+	/* Update or retrieve the settings for a date picker attached to an input field or division.
+	 * @param  target  element - the target input field or division or span
+	 * @param  name	object - the new settings to update or
+	 *				string - the name of the setting to change or retrieve,
+	 *				when retrieving also "all" for all instance settings or
+	 *				"defaults" for all global defaults
+	 * @param  value   any - the new value for the setting
+	 *				(omit if above is an object or to retrieve a value)
+	 */
+	_optionDatepicker: function(target, name, value) {
+		var settings, date, minDate, maxDate,
+			inst = this._getInst(target);
+
+		if (arguments.length === 2 && typeof name === "string") {
+			return (name === "defaults" ? $.extend({}, $.datepicker._defaults) :
+				(inst ? (name === "all" ? $.extend({}, inst.settings) :
+				this._get(inst, name)) : null));
+		}
+
+		settings = name || {};
+		if (typeof name === "string") {
+			settings = {};
+			settings[name] = value;
+		}
+
+		if (inst) {
+			if (this._curInst === inst) {
+				this._hideDatepicker();
+			}
+
+			date = this._getDateDatepicker(target, true);
+			minDate = this._getMinMaxDate(inst, "min");
+			maxDate = this._getMinMaxDate(inst, "max");
+			datepicker_extendRemove(inst.settings, settings);
+			// reformat the old minDate/maxDate values if dateFormat changes and a new minDate/maxDate isn't provided
+			if (minDate !== null && settings.dateFormat !== undefined && settings.minDate === undefined) {
+				inst.settings.minDate = this._formatDate(inst, minDate);
+			}
+			if (maxDate !== null && settings.dateFormat !== undefined && settings.maxDate === undefined) {
+				inst.settings.maxDate = this._formatDate(inst, maxDate);
+			}
+			if ( "disabled" in settings ) {
+				if ( settings.disabled ) {
+					this._disableDatepicker(target);
+				} else {
+					this._enableDatepicker(target);
+				}
+			}
+			this._attachments($(target), inst);
+			this._autoSize(inst);
+			this._setDate(inst, date);
+			this._updateAlternate(inst);
+			this._updateDatepicker(inst);
+		}
+	},
+
+	// change method deprecated
+	_changeDatepicker: function(target, name, value) {
+		this._optionDatepicker(target, name, value);
+	},
+
+	/* Redraw the date picker attached to an input field or division.
+	 * @param  target  element - the target input field or division or span
+	 */
+	_refreshDatepicker: function(target) {
+		var inst = this._getInst(target);
+		if (inst) {
+			this._updateDatepicker(inst);
+		}
+	},
+
+	/* Set the dates for a jQuery selection.
+	 * @param  target element - the target input field or division or span
+	 * @param  date	Date - the new date
+	 */
+	_setDateDatepicker: function(target, date) {
+		var inst = this._getInst(target);
+		if (inst) {
+			this._setDate(inst, date);
+			this._updateDatepicker(inst);
+			this._updateAlternate(inst);
+		}
+	},
+
+	/* Get the date(s) for the first entry in a jQuery selection.
+	 * @param  target element - the target input field or division or span
+	 * @param  noDefault boolean - true if no default date is to be used
+	 * @return Date - the current date
+	 */
+	_getDateDatepicker: function(target, noDefault) {
+		var inst = this._getInst(target);
+		if (inst && !inst.inline) {
+			this._setDateFromField(inst, noDefault);
+		}
+		return (inst ? this._getDate(inst) : null);
+	},
+
+	/* Handle keystrokes. */
+	_doKeyDown: function(event) {
+		var onSelect, dateStr, sel,
+			inst = $.datepicker._getInst(event.target),
+			handled = true,
+			isRTL = inst.dpDiv.is(".ui-datepicker-rtl");
+
+		inst._keyEvent = true;
+		if ($.datepicker._datepickerShowing) {
+			switch (event.keyCode) {
+				case 9: $.datepicker._hideDatepicker();
+						handled = false;
+						break; // hide on tab out
+				case 13: sel = $("td." + $.datepicker._dayOverClass + ":not(." +
+									$.datepicker._currentClass + ")", inst.dpDiv);
+						if (sel[0]) {
+							$.datepicker._selectDay(event.target, inst.selectedMonth, inst.selectedYear, sel[0]);
+						}
+
+						onSelect = $.datepicker._get(inst, "onSelect");
+						if (onSelect) {
+							dateStr = $.datepicker._formatDate(inst);
+
+							// trigger custom callback
+							onSelect.apply((inst.input ? inst.input[0] : null), [dateStr, inst]);
+						} else {
+							$.datepicker._hideDatepicker();
+						}
+
+						return false; // don't submit the form
+				case 27: $.datepicker._hideDatepicker();
+						break; // hide on escape
+				case 33: $.datepicker._adjustDate(event.target, (event.ctrlKey ?
+							-$.datepicker._get(inst, "stepBigMonths") :
+							-$.datepicker._get(inst, "stepMonths")), "M");
+						break; // previous month/year on page up/+ ctrl
+				case 34: $.datepicker._adjustDate(event.target, (event.ctrlKey ?
+							+$.datepicker._get(inst, "stepBigMonths") :
+							+$.datepicker._get(inst, "stepMonths")), "M");
+						break; // next month/year on page down/+ ctrl
+				case 35: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._clearDate(event.target);
+						}
+						handled = event.ctrlKey || event.metaKey;
+						break; // clear on ctrl or command +end
+				case 36: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._gotoToday(event.target);
+						}
+						handled = event.ctrlKey || event.metaKey;
+						break; // current on ctrl or command +home
+				case 37: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._adjustDate(event.target, (isRTL ? +1 : -1), "D");
+						}
+						handled = event.ctrlKey || event.metaKey;
+						// -1 day on ctrl or command +left
+						if (event.originalEvent.altKey) {
+							$.datepicker._adjustDate(event.target, (event.ctrlKey ?
+								-$.datepicker._get(inst, "stepBigMonths") :
+								-$.datepicker._get(inst, "stepMonths")), "M");
+						}
+						// next month/year on alt +left on Mac
+						break;
+				case 38: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._adjustDate(event.target, -7, "D");
+						}
+						handled = event.ctrlKey || event.metaKey;
+						break; // -1 week on ctrl or command +up
+				case 39: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._adjustDate(event.target, (isRTL ? -1 : +1), "D");
+						}
+						handled = event.ctrlKey || event.metaKey;
+						// +1 day on ctrl or command +right
+						if (event.originalEvent.altKey) {
+							$.datepicker._adjustDate(event.target, (event.ctrlKey ?
+								+$.datepicker._get(inst, "stepBigMonths") :
+								+$.datepicker._get(inst, "stepMonths")), "M");
+						}
+						// next month/year on alt +right
+						break;
+				case 40: if (event.ctrlKey || event.metaKey) {
+							$.datepicker._adjustDate(event.target, +7, "D");
+						}
+						handled = event.ctrlKey || event.metaKey;
+						break; // +1 week on ctrl or command +down
+				default: handled = false;
+			}
+		} else if (event.keyCode === 36 && event.ctrlKey) { // display the date picker on ctrl+home
+			$.datepicker._showDatepicker(this);
+		} else {
+			handled = false;
+		}
+
+		if (handled) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+	},
+
+	/* Filter entered characters - based on date format. */
+	_doKeyPress: function(event) {
+		var chars, chr,
+			inst = $.datepicker._getInst(event.target);
+
+		if ($.datepicker._get(inst, "constrainInput")) {
+			chars = $.datepicker._possibleChars($.datepicker._get(inst, "dateFormat"));
+			chr = String.fromCharCode(event.charCode == null ? event.keyCode : event.charCode);
+			return event.ctrlKey || event.metaKey || (chr < " " || !chars || chars.indexOf(chr) > -1);
+		}
+	},
+
+	/* Synchronise manual entry and field/alternate field. */
+	_doKeyUp: function(event) {
+		var date,
+			inst = $.datepicker._getInst(event.target);
+
+		if (inst.input.val() !== inst.lastVal) {
+			try {
+				date = $.datepicker.parseDate($.datepicker._get(inst, "dateFormat"),
+					(inst.input ? inst.input.val() : null),
+					$.datepicker._getFormatConfig(inst));
+
+				if (date) { // only if valid
+					$.datepicker._setDateFromField(inst);
+					$.datepicker._updateAlternate(inst);
+					$.datepicker._updateDatepicker(inst);
+				}
+			}
+			catch (err) {
+			}
+		}
+		return true;
+	},
+
+	/* Pop-up the date picker for a given input field.
+	 * If false returned from beforeShow event handler do not show.
+	 * @param  input  element - the input field attached to the date picker or
+	 *					event - if triggered by focus
+	 */
+	_showDatepicker: function(input) {
+		input = input.target || input;
+		if (input.nodeName.toLowerCase() !== "input") { // find from button/image trigger
+			input = $("input", input.parentNode)[0];
+		}
+
+		if ($.datepicker._isDisabledDatepicker(input) || $.datepicker._lastInput === input) { // already here
+			return;
+		}
+
+		var inst, beforeShow, beforeShowSettings, isFixed,
+			offset, showAnim, duration;
+
+		inst = $.datepicker._getInst(input);
+		if ($.datepicker._curInst && $.datepicker._curInst !== inst) {
+			$.datepicker._curInst.dpDiv.stop(true, true);
+			if ( inst && $.datepicker._datepickerShowing ) {
+				$.datepicker._hideDatepicker( $.datepicker._curInst.input[0] );
+			}
+		}
+
+		beforeShow = $.datepicker._get(inst, "beforeShow");
+		beforeShowSettings = beforeShow ? beforeShow.apply(input, [input, inst]) : {};
+		if(beforeShowSettings === false){
+			return;
+		}
+		datepicker_extendRemove(inst.settings, beforeShowSettings);
+
+		inst.lastVal = null;
+		$.datepicker._lastInput = input;
+		$.datepicker._setDateFromField(inst);
+
+		if ($.datepicker._inDialog) { // hide cursor
+			input.value = "";
+		}
+		if (!$.datepicker._pos) { // position below input
+			$.datepicker._pos = $.datepicker._findPos(input);
+			$.datepicker._pos[1] += input.offsetHeight; // add the height
+		}
+
+		isFixed = false;
+		$(input).parents().each(function() {
+			isFixed |= $(this).css("position") === "fixed";
+			return !isFixed;
+		});
+
+		offset = {left: $.datepicker._pos[0], top: $.datepicker._pos[1]};
+		$.datepicker._pos = null;
+		//to avoid flashes on Firefox
+		inst.dpDiv.empty();
+		// determine sizing offscreen
+		inst.dpDiv.css({position: "absolute", display: "block", top: "-1000px"});
+		$.datepicker._updateDatepicker(inst);
+		// fix width for dynamic number of date pickers
+		// and adjust position before showing
+		offset = $.datepicker._checkOffset(inst, offset, isFixed);
+		inst.dpDiv.css({position: ($.datepicker._inDialog && $.blockUI ?
+			"static" : (isFixed ? "fixed" : "absolute")), display: "none",
+			left: offset.left + "px", top: offset.top + "px"});
+
+		if (!inst.inline) {
+			showAnim = $.datepicker._get(inst, "showAnim");
+			duration = $.datepicker._get(inst, "duration");
+			inst.dpDiv.css( "z-index", datepicker_getZindex( $( input ) ) + 1 );
+			$.datepicker._datepickerShowing = true;
+
+			if ( $.effects && $.effects.effect[ showAnim ] ) {
+				inst.dpDiv.show(showAnim, $.datepicker._get(inst, "showOptions"), duration);
+			} else {
+				inst.dpDiv[showAnim || "show"](showAnim ? duration : null);
+			}
+
+			if ( $.datepicker._shouldFocusInput( inst ) ) {
+				inst.input.focus();
+			}
+
+			$.datepicker._curInst = inst;
+		}
+	},
+
+	/* Generate the date picker content. */
+	_updateDatepicker: function(inst) {
+		this.maxRows = 4; //Reset the max number of rows being displayed (see #7043)
+		datepicker_instActive = inst; // for delegate hover events
+		inst.dpDiv.empty().append(this._generateHTML(inst));
+		this._attachHandlers(inst);
+
+		var origyearshtml,
+			numMonths = this._getNumberOfMonths(inst),
+			cols = numMonths[1],
+			width = 17,
+			activeCell = inst.dpDiv.find( "." + this._dayOverClass + " a" );
+
+		if ( activeCell.length > 0 ) {
+			datepicker_handleMouseover.apply( activeCell.get( 0 ) );
+		}
+
+		inst.dpDiv.removeClass("ui-datepicker-multi-2 ui-datepicker-multi-3 ui-datepicker-multi-4").width("");
+		if (cols > 1) {
+			inst.dpDiv.addClass("ui-datepicker-multi-" + cols).css("width", (width * cols) + "em");
+		}
+		inst.dpDiv[(numMonths[0] !== 1 || numMonths[1] !== 1 ? "add" : "remove") +
+			"Class"]("ui-datepicker-multi");
+		inst.dpDiv[(this._get(inst, "isRTL") ? "add" : "remove") +
+			"Class"]("ui-datepicker-rtl");
+
+		if (inst === $.datepicker._curInst && $.datepicker._datepickerShowing && $.datepicker._shouldFocusInput( inst ) ) {
+			inst.input.focus();
+		}
+
+		// deffered render of the years select (to avoid flashes on Firefox)
+		if( inst.yearshtml ){
+			origyearshtml = inst.yearshtml;
+			setTimeout(function(){
+				//assure that inst.yearshtml didn't change.
+				if( origyearshtml === inst.yearshtml && inst.yearshtml ){
+					inst.dpDiv.find("select.ui-datepicker-year:first").replaceWith(inst.yearshtml);
+				}
+				origyearshtml = inst.yearshtml = null;
+			}, 0);
+		}
+	},
+
+	// #6694 - don't focus the input if it's already focused
+	// this breaks the change event in IE
+	// Support: IE and jQuery <1.9
+	_shouldFocusInput: function( inst ) {
+		return inst.input && inst.input.is( ":visible" ) && !inst.input.is( ":disabled" ) && !inst.input.is( ":focus" );
+	},
+
+	/* Check positioning to remain on screen. */
+	_checkOffset: function(inst, offset, isFixed) {
+		var dpWidth = inst.dpDiv.outerWidth(),
+			dpHeight = inst.dpDiv.outerHeight(),
+			inputWidth = inst.input ? inst.input.outerWidth() : 0,
+			inputHeight = inst.input ? inst.input.outerHeight() : 0,
+			viewWidth = document.documentElement.clientWidth + (isFixed ? 0 : $(document).scrollLeft()),
+			viewHeight = document.documentElement.clientHeight + (isFixed ? 0 : $(document).scrollTop());
+
+		offset.left -= (this._get(inst, "isRTL") ? (dpWidth - inputWidth) : 0);
+		offset.left -= (isFixed && offset.left === inst.input.offset().left) ? $(document).scrollLeft() : 0;
+		offset.top -= (isFixed && offset.top === (inst.input.offset().top + inputHeight)) ? $(document).scrollTop() : 0;
+
+		// now check if datepicker is showing outside window viewport - move to a better place if so.
+		offset.left -= Math.min(offset.left, (offset.left + dpWidth > viewWidth && viewWidth > dpWidth) ?
+			Math.abs(offset.left + dpWidth - viewWidth) : 0);
+		offset.top -= Math.min(offset.top, (offset.top + dpHeight > viewHeight && viewHeight > dpHeight) ?
+			Math.abs(dpHeight + inputHeight) : 0);
+
+		return offset;
+	},
+
+	/* Find an object's position on the screen. */
+	_findPos: function(obj) {
+		var position,
+			inst = this._getInst(obj),
+			isRTL = this._get(inst, "isRTL");
+
+		while (obj && (obj.type === "hidden" || obj.nodeType !== 1 || $.expr.filters.hidden(obj))) {
+			obj = obj[isRTL ? "previousSibling" : "nextSibling"];
+		}
+
+		position = $(obj).offset();
+		return [position.left, position.top];
+	},
+
+	/* Hide the date picker from view.
+	 * @param  input  element - the input field attached to the date picker
+	 */
+	_hideDatepicker: function(input) {
+		var showAnim, duration, postProcess, onClose,
+			inst = this._curInst;
+
+		if (!inst || (input && inst !== $.data(input, "datepicker"))) {
+			return;
+		}
+
+		if (this._datepickerShowing) {
+			showAnim = this._get(inst, "showAnim");
+			duration = this._get(inst, "duration");
+			postProcess = function() {
+				$.datepicker._tidyDialog(inst);
+			};
+
+			// DEPRECATED: after BC for 1.8.x $.effects[ showAnim ] is not needed
+			if ( $.effects && ( $.effects.effect[ showAnim ] || $.effects[ showAnim ] ) ) {
+				inst.dpDiv.hide(showAnim, $.datepicker._get(inst, "showOptions"), duration, postProcess);
+			} else {
+				inst.dpDiv[(showAnim === "slideDown" ? "slideUp" :
+					(showAnim === "fadeIn" ? "fadeOut" : "hide"))]((showAnim ? duration : null), postProcess);
+			}
+
+			if (!showAnim) {
+				postProcess();
+			}
+			this._datepickerShowing = false;
+
+			onClose = this._get(inst, "onClose");
+			if (onClose) {
+				onClose.apply((inst.input ? inst.input[0] : null), [(inst.input ? inst.input.val() : ""), inst]);
+			}
+
+			this._lastInput = null;
+			if (this._inDialog) {
+				this._dialogInput.css({ position: "absolute", left: "0", top: "-100px" });
+				if ($.blockUI) {
+					$.unblockUI();
+					$("body").append(this.dpDiv);
+				}
+			}
+			this._inDialog = false;
+		}
+	},
+
+	/* Tidy up after a dialog display. */
+	_tidyDialog: function(inst) {
+		inst.dpDiv.removeClass(this._dialogClass).unbind(".ui-datepicker-calendar");
+	},
+
+	/* Close date picker if clicked elsewhere. */
+	_checkExternalClick: function(event) {
+		if (!$.datepicker._curInst) {
+			return;
+		}
+
+		var $target = $(event.target),
+			inst = $.datepicker._getInst($target[0]);
+
+		if ( ( ( $target[0].id !== $.datepicker._mainDivId &&
+				$target.parents("#" + $.datepicker._mainDivId).length === 0 &&
+				!$target.hasClass($.datepicker.markerClassName) &&
+				!$target.closest("." + $.datepicker._triggerClass).length &&
+				$.datepicker._datepickerShowing && !($.datepicker._inDialog && $.blockUI) ) ) ||
+			( $target.hasClass($.datepicker.markerClassName) && $.datepicker._curInst !== inst ) ) {
+				$.datepicker._hideDatepicker();
+		}
+	},
+
+	/* Adjust one of the date sub-fields. */
+	_adjustDate: function(id, offset, period) {
+		var target = $(id),
+			inst = this._getInst(target[0]);
+
+		if (this._isDisabledDatepicker(target[0])) {
+			return;
+		}
+		this._adjustInstDate(inst, offset +
+			(period === "M" ? this._get(inst, "showCurrentAtPos") : 0), // undo positioning
+			period);
+		this._updateDatepicker(inst);
+	},
+
+	/* Action for current link. */
+	_gotoToday: function(id) {
+		var date,
+			target = $(id),
+			inst = this._getInst(target[0]);
+
+		if (this._get(inst, "gotoCurrent") && inst.currentDay) {
+			inst.selectedDay = inst.currentDay;
+			inst.drawMonth = inst.selectedMonth = inst.currentMonth;
+			inst.drawYear = inst.selectedYear = inst.currentYear;
+		} else {
+			date = new Date();
+			inst.selectedDay = date.getDate();
+			inst.drawMonth = inst.selectedMonth = date.getMonth();
+			inst.drawYear = inst.selectedYear = date.getFullYear();
+		}
+		this._notifyChange(inst);
+		this._adjustDate(target);
+	},
+
+	/* Action for selecting a new month/year. */
+	_selectMonthYear: function(id, select, period) {
+		var target = $(id),
+			inst = this._getInst(target[0]);
+
+		inst["selected" + (period === "M" ? "Month" : "Year")] =
+		inst["draw" + (period === "M" ? "Month" : "Year")] =
+			parseInt(select.options[select.selectedIndex].value,10);
+
+		this._notifyChange(inst);
+		this._adjustDate(target);
+	},
+
+	/* Action for selecting a day. */
+	_selectDay: function(id, month, year, td) {
+		var inst,
+			target = $(id);
+
+		if ($(td).hasClass(this._unselectableClass) || this._isDisabledDatepicker(target[0])) {
+			return;
+		}
+
+		inst = this._getInst(target[0]);
+		inst.selectedDay = inst.currentDay = $("a", td).html();
+		inst.selectedMonth = inst.currentMonth = month;
+		inst.selectedYear = inst.currentYear = year;
+		this._selectDate(id, this._formatDate(inst,
+			inst.currentDay, inst.currentMonth, inst.currentYear));
+	},
+
+	/* Erase the input field and hide the date picker. */
+	_clearDate: function(id) {
+		var target = $(id);
+		this._selectDate(target, "");
+	},
+
+	/* Update the input field with the selected date. */
+	_selectDate: function(id, dateStr) {
+		var onSelect,
+			target = $(id),
+			inst = this._getInst(target[0]);
+
+		dateStr = (dateStr != null ? dateStr : this._formatDate(inst));
+		if (inst.input) {
+			inst.input.val(dateStr);
+		}
+		this._updateAlternate(inst);
+
+		onSelect = this._get(inst, "onSelect");
+		if (onSelect) {
+			onSelect.apply((inst.input ? inst.input[0] : null), [dateStr, inst]);  // trigger custom callback
+		} else if (inst.input) {
+			inst.input.trigger("change"); // fire the change event
+		}
+
+		if (inst.inline){
+			this._updateDatepicker(inst);
+		} else {
+			this._hideDatepicker();
+			this._lastInput = inst.input[0];
+			if (typeof(inst.input[0]) !== "object") {
+				inst.input.focus(); // restore focus
+			}
+			this._lastInput = null;
+		}
+	},
+
+	/* Update any alternate field to synchronise with the main field. */
+	_updateAlternate: function(inst) {
+		var altFormat, date, dateStr,
+			altField = this._get(inst, "altField");
+
+		if (altField) { // update alternate field too
+			altFormat = this._get(inst, "altFormat") || this._get(inst, "dateFormat");
+			date = this._getDate(inst);
+			dateStr = this.formatDate(altFormat, date, this._getFormatConfig(inst));
+			$(altField).each(function() { $(this).val(dateStr); });
+		}
+	},
+
+	/* Set as beforeShowDay function to prevent selection of weekends.
+	 * @param  date  Date - the date to customise
+	 * @return [boolean, string] - is this date selectable?, what is its CSS class?
+	 */
+	noWeekends: function(date) {
+		var day = date.getDay();
+		return [(day > 0 && day < 6), ""];
+	},
+
+	/* Set as calculateWeek to determine the week of the year based on the ISO 8601 definition.
+	 * @param  date  Date - the date to get the week for
+	 * @return  number - the number of the week within the year that contains this date
+	 */
+	iso8601Week: function(date) {
+		var time,
+			checkDate = new Date(date.getTime());
+
+		// Find Thursday of this week starting on Monday
+		checkDate.setDate(checkDate.getDate() + 4 - (checkDate.getDay() || 7));
+
+		time = checkDate.getTime();
+		checkDate.setMonth(0); // Compare with Jan 1
+		checkDate.setDate(1);
+		return Math.floor(Math.round((time - checkDate) / 86400000) / 7) + 1;
+	},
+
+	/* Parse a string value into a date object.
+	 * See formatDate below for the possible formats.
+	 *
+	 * @param  format string - the expected format of the date
+	 * @param  value string - the date in the above format
+	 * @param  settings Object - attributes include:
+	 *					shortYearCutoff  number - the cutoff year for determining the century (optional)
+	 *					dayNamesShort	string[7] - abbreviated names of the days from Sunday (optional)
+	 *					dayNames		string[7] - names of the days from Sunday (optional)
+	 *					monthNamesShort string[12] - abbreviated names of the months (optional)
+	 *					monthNames		string[12] - names of the months (optional)
+	 * @return  Date - the extracted date value or null if value is blank
+	 */
+	parseDate: function (format, value, settings) {
+		if (format == null || value == null) {
+			throw "Invalid arguments";
+		}
+
+		value = (typeof value === "object" ? value.toString() : value + "");
+		if (value === "") {
+			return null;
+		}
+
+		var iFormat, dim, extra,
+			iValue = 0,
+			shortYearCutoffTemp = (settings ? settings.shortYearCutoff : null) || this._defaults.shortYearCutoff,
+			shortYearCutoff = (typeof shortYearCutoffTemp !== "string" ? shortYearCutoffTemp :
+				new Date().getFullYear() % 100 + parseInt(shortYearCutoffTemp, 10)),
+			dayNamesShort = (settings ? settings.dayNamesShort : null) || this._defaults.dayNamesShort,
+			dayNames = (settings ? settings.dayNames : null) || this._defaults.dayNames,
+			monthNamesShort = (settings ? settings.monthNamesShort : null) || this._defaults.monthNamesShort,
+			monthNames = (settings ? settings.monthNames : null) || this._defaults.monthNames,
+			year = -1,
+			month = -1,
+			day = -1,
+			doy = -1,
+			literal = false,
+			date,
+			// Check whether a format character is doubled
+			lookAhead = function(match) {
+				var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) === match);
+				if (matches) {
+					iFormat++;
+				}
+				return matches;
+			},
+			// Extract a number from the string value
+			getNumber = function(match) {
+				var isDoubled = lookAhead(match),
+					size = (match === "@" ? 14 : (match === "!" ? 20 :
+					(match === "y" && isDoubled ? 4 : (match === "o" ? 3 : 2)))),
+					minSize = (match === "y" ? size : 1),
+					digits = new RegExp("^\\d{" + minSize + "," + size + "}"),
+					num = value.substring(iValue).match(digits);
+				if (!num) {
+					throw "Missing number at position " + iValue;
+				}
+				iValue += num[0].length;
+				return parseInt(num[0], 10);
+			},
+			// Extract a name from the string value and convert to an index
+			getName = function(match, shortNames, longNames) {
+				var index = -1,
+					names = $.map(lookAhead(match) ? longNames : shortNames, function (v, k) {
+						return [ [k, v] ];
+					}).sort(function (a, b) {
+						return -(a[1].length - b[1].length);
+					});
+
+				$.each(names, function (i, pair) {
+					var name = pair[1];
+					if (value.substr(iValue, name.length).toLowerCase() === name.toLowerCase()) {
+						index = pair[0];
+						iValue += name.length;
+						return false;
+					}
+				});
+				if (index !== -1) {
+					return index + 1;
+				} else {
+					throw "Unknown name at position " + iValue;
+				}
+			},
+			// Confirm that a literal character matches the string value
+			checkLiteral = function() {
+				if (value.charAt(iValue) !== format.charAt(iFormat)) {
+					throw "Unexpected literal at position " + iValue;
+				}
+				iValue++;
+			};
+
+		for (iFormat = 0; iFormat < format.length; iFormat++) {
+			if (literal) {
+				if (format.charAt(iFormat) === "'" && !lookAhead("'")) {
+					literal = false;
+				} else {
+					checkLiteral();
+				}
+			} else {
+				switch (format.charAt(iFormat)) {
+					case "d":
+						day = getNumber("d");
+						break;
+					case "D":
+						getName("D", dayNamesShort, dayNames);
+						break;
+					case "o":
+						doy = getNumber("o");
+						break;
+					case "m":
+						month = getNumber("m");
+						break;
+					case "M":
+						month = getName("M", monthNamesShort, monthNames);
+						break;
+					case "y":
+						year = getNumber("y");
+						break;
+					case "@":
+						date = new Date(getNumber("@"));
+						year = date.getFullYear();
+						month = date.getMonth() + 1;
+						day = date.getDate();
+						break;
+					case "!":
+						date = new Date((getNumber("!") - this._ticksTo1970) / 10000);
+						year = date.getFullYear();
+						month = date.getMonth() + 1;
+						day = date.getDate();
+						break;
+					case "'":
+						if (lookAhead("'")){
+							checkLiteral();
+						} else {
+							literal = true;
+						}
+						break;
+					default:
+						checkLiteral();
+				}
+			}
+		}
+
+		if (iValue < value.length){
+			extra = value.substr(iValue);
+			if (!/^\s+/.test(extra)) {
+				throw "Extra/unparsed characters found in date: " + extra;
+			}
+		}
+
+		if (year === -1) {
+			year = new Date().getFullYear();
+		} else if (year < 100) {
+			year += new Date().getFullYear() - new Date().getFullYear() % 100 +
+				(year <= shortYearCutoff ? 0 : -100);
+		}
+
+		if (doy > -1) {
+			month = 1;
+			day = doy;
+			do {
+				dim = this._getDaysInMonth(year, month - 1);
+				if (day <= dim) {
+					break;
+				}
+				month++;
+				day -= dim;
+			} while (true);
+		}
+
+		date = this._daylightSavingAdjust(new Date(year, month - 1, day));
+		if (date.getFullYear() !== year || date.getMonth() + 1 !== month || date.getDate() !== day) {
+			throw "Invalid date"; // E.g. 31/02/00
+		}
+		return date;
+	},
+
+	/* Standard date formats. */
+	ATOM: "yy-mm-dd", // RFC 3339 (ISO 8601)
+	COOKIE: "D, dd M yy",
+	ISO_8601: "yy-mm-dd",
+	RFC_822: "D, d M y",
+	RFC_850: "DD, dd-M-y",
+	RFC_1036: "D, d M y",
+	RFC_1123: "D, d M yy",
+	RFC_2822: "D, d M yy",
+	RSS: "D, d M y", // RFC 822
+	TICKS: "!",
+	TIMESTAMP: "@",
+	W3C: "yy-mm-dd", // ISO 8601
+
+	_ticksTo1970: (((1970 - 1) * 365 + Math.floor(1970 / 4) - Math.floor(1970 / 100) +
+		Math.floor(1970 / 400)) * 24 * 60 * 60 * 10000000),
+
+	/* Format a date object into a string value.
+	 * The format can be combinations of the following:
+	 * d  - day of month (no leading zero)
+	 * dd - day of month (two digit)
+	 * o  - day of year (no leading zeros)
+	 * oo - day of year (three digit)
+	 * D  - day name short
+	 * DD - day name long
+	 * m  - month of year (no leading zero)
+	 * mm - month of year (two digit)
+	 * M  - month name short
+	 * MM - month name long
+	 * y  - year (two digit)
+	 * yy - year (four digit)
+	 * @ - Unix timestamp (ms since 01/01/1970)
+	 * ! - Windows ticks (100ns since 01/01/0001)
+	 * "..." - literal text
+	 * '' - single quote
+	 *
+	 * @param  format string - the desired format of the date
+	 * @param  date Date - the date value to format
+	 * @param  settings Object - attributes include:
+	 *					dayNamesShort	string[7] - abbreviated names of the days from Sunday (optional)
+	 *					dayNames		string[7] - names of the days from Sunday (optional)
+	 *					monthNamesShort string[12] - abbreviated names of the months (optional)
+	 *					monthNames		string[12] - names of the months (optional)
+	 * @return  string - the date in the above format
+	 */
+	formatDate: function (format, date, settings) {
+		if (!date) {
+			return "";
+		}
+
+		var iFormat,
+			dayNamesShort = (settings ? settings.dayNamesShort : null) || this._defaults.dayNamesShort,
+			dayNames = (settings ? settings.dayNames : null) || this._defaults.dayNames,
+			monthNamesShort = (settings ? settings.monthNamesShort : null) || this._defaults.monthNamesShort,
+			monthNames = (settings ? settings.monthNames : null) || this._defaults.monthNames,
+			// Check whether a format character is doubled
+			lookAhead = function(match) {
+				var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) === match);
+				if (matches) {
+					iFormat++;
+				}
+				return matches;
+			},
+			// Format a number, with leading zero if necessary
+			formatNumber = function(match, value, len) {
+				var num = "" + value;
+				if (lookAhead(match)) {
+					while (num.length < len) {
+						num = "0" + num;
+					}
+				}
+				return num;
+			},
+			// Format a name, short or long as requested
+			formatName = function(match, value, shortNames, longNames) {
+				return (lookAhead(match) ? longNames[value] : shortNames[value]);
+			},
+			output = "",
+			literal = false;
+
+		if (date) {
+			for (iFormat = 0; iFormat < format.length; iFormat++) {
+				if (literal) {
+					if (format.charAt(iFormat) === "'" && !lookAhead("'")) {
+						literal = false;
+					} else {
+						output += format.charAt(iFormat);
+					}
+				} else {
+					switch (format.charAt(iFormat)) {
+						case "d":
+							output += formatNumber("d", date.getDate(), 2);
+							break;
+						case "D":
+							output += formatName("D", date.getDay(), dayNamesShort, dayNames);
+							break;
+						case "o":
+							output += formatNumber("o",
+								Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000), 3);
+							break;
+						case "m":
+							output += formatNumber("m", date.getMonth() + 1, 2);
+							break;
+						case "M":
+							output += formatName("M", date.getMonth(), monthNamesShort, monthNames);
+							break;
+						case "y":
+							output += (lookAhead("y") ? date.getFullYear() :
+								(date.getYear() % 100 < 10 ? "0" : "") + date.getYear() % 100);
+							break;
+						case "@":
+							output += date.getTime();
+							break;
+						case "!":
+							output += date.getTime() * 10000 + this._ticksTo1970;
+							break;
+						case "'":
+							if (lookAhead("'")) {
+								output += "'";
+							} else {
+								literal = true;
+							}
+							break;
+						default:
+							output += format.charAt(iFormat);
+					}
+				}
+			}
+		}
+		return output;
+	},
+
+	/* Extract all possible characters from the date format. */
+	_possibleChars: function (format) {
+		var iFormat,
+			chars = "",
+			literal = false,
+			// Check whether a format character is doubled
+			lookAhead = function(match) {
+				var matches = (iFormat + 1 < format.length && format.charAt(iFormat + 1) === match);
+				if (matches) {
+					iFormat++;
+				}
+				return matches;
+			};
+
+		for (iFormat = 0; iFormat < format.length; iFormat++) {
+			if (literal) {
+				if (format.charAt(iFormat) === "'" && !lookAhead("'")) {
+					literal = false;
+				} else {
+					chars += format.charAt(iFormat);
+				}
+			} else {
+				switch (format.charAt(iFormat)) {
+					case "d": case "m": case "y": case "@":
+						chars += "0123456789";
+						break;
+					case "D": case "M":
+						return null; // Accept anything
+					case "'":
+						if (lookAhead("'")) {
+							chars += "'";
+						} else {
+							literal = true;
+						}
+						break;
+					default:
+						chars += format.charAt(iFormat);
+				}
+			}
+		}
+		return chars;
+	},
+
+	/* Get a setting value, defaulting if necessary. */
+	_get: function(inst, name) {
+		return inst.settings[name] !== undefined ?
+			inst.settings[name] : this._defaults[name];
+	},
+
+	/* Parse existing date and initialise date picker. */
+	_setDateFromField: function(inst, noDefault) {
+		if (inst.input.val() === inst.lastVal) {
+			return;
+		}
+
+		var dateFormat = this._get(inst, "dateFormat"),
+			dates = inst.lastVal = inst.input ? inst.input.val() : null,
+			defaultDate = this._getDefaultDate(inst),
+			date = defaultDate,
+			settings = this._getFormatConfig(inst);
+
+		try {
+			date = this.parseDate(dateFormat, dates, settings) || defaultDate;
+		} catch (event) {
+			dates = (noDefault ? "" : dates);
+		}
+		inst.selectedDay = date.getDate();
+		inst.drawMonth = inst.selectedMonth = date.getMonth();
+		inst.drawYear = inst.selectedYear = date.getFullYear();
+		inst.currentDay = (dates ? date.getDate() : 0);
+		inst.currentMonth = (dates ? date.getMonth() : 0);
+		inst.currentYear = (dates ? date.getFullYear() : 0);
+		this._adjustInstDate(inst);
+	},
+
+	/* Retrieve the default date shown on opening. */
+	_getDefaultDate: function(inst) {
+		return this._restrictMinMax(inst,
+			this._determineDate(inst, this._get(inst, "defaultDate"), new Date()));
+	},
+
+	/* A date may be specified as an exact value or a relative one. */
+	_determineDate: function(inst, date, defaultDate) {
+		var offsetNumeric = function(offset) {
+				var date = new Date();
+				date.setDate(date.getDate() + offset);
+				return date;
+			},
+			offsetString = function(offset) {
+				try {
+					return $.datepicker.parseDate($.datepicker._get(inst, "dateFormat"),
+						offset, $.datepicker._getFormatConfig(inst));
+				}
+				catch (e) {
+					// Ignore
+				}
+
+				var date = (offset.toLowerCase().match(/^c/) ?
+					$.datepicker._getDate(inst) : null) || new Date(),
+					year = date.getFullYear(),
+					month = date.getMonth(),
+					day = date.getDate(),
+					pattern = /([+\-]?[0-9]+)\s*(d|D|w|W|m|M|y|Y)?/g,
+					matches = pattern.exec(offset);
+
+				while (matches) {
+					switch (matches[2] || "d") {
+						case "d" : case "D" :
+							day += parseInt(matches[1],10); break;
+						case "w" : case "W" :
+							day += parseInt(matches[1],10) * 7; break;
+						case "m" : case "M" :
+							month += parseInt(matches[1],10);
+							day = Math.min(day, $.datepicker._getDaysInMonth(year, month));
+							break;
+						case "y": case "Y" :
+							year += parseInt(matches[1],10);
+							day = Math.min(day, $.datepicker._getDaysInMonth(year, month));
+							break;
+					}
+					matches = pattern.exec(offset);
+				}
+				return new Date(year, month, day);
+			},
+			newDate = (date == null || date === "" ? defaultDate : (typeof date === "string" ? offsetString(date) :
+				(typeof date === "number" ? (isNaN(date) ? defaultDate : offsetNumeric(date)) : new Date(date.getTime()))));
+
+		newDate = (newDate && newDate.toString() === "Invalid Date" ? defaultDate : newDate);
+		if (newDate) {
+			newDate.setHours(0);
+			newDate.setMinutes(0);
+			newDate.setSeconds(0);
+			newDate.setMilliseconds(0);
+		}
+		return this._daylightSavingAdjust(newDate);
+	},
+
+	/* Handle switch to/from daylight saving.
+	 * Hours may be non-zero on daylight saving cut-over:
+	 * > 12 when midnight changeover, but then cannot generate
+	 * midnight datetime, so jump to 1AM, otherwise reset.
+	 * @param  date  (Date) the date to check
+	 * @return  (Date) the corrected date
+	 */
+	_daylightSavingAdjust: function(date) {
+		if (!date) {
+			return null;
+		}
+		date.setHours(date.getHours() > 12 ? date.getHours() + 2 : 0);
+		return date;
+	},
+
+	/* Set the date(s) directly. */
+	_setDate: function(inst, date, noChange) {
+		var clear = !date,
+			origMonth = inst.selectedMonth,
+			origYear = inst.selectedYear,
+			newDate = this._restrictMinMax(inst, this._determineDate(inst, date, new Date()));
+
+		inst.selectedDay = inst.currentDay = newDate.getDate();
+		inst.drawMonth = inst.selectedMonth = inst.currentMonth = newDate.getMonth();
+		inst.drawYear = inst.selectedYear = inst.currentYear = newDate.getFullYear();
+		if ((origMonth !== inst.selectedMonth || origYear !== inst.selectedYear) && !noChange) {
+			this._notifyChange(inst);
+		}
+		this._adjustInstDate(inst);
+		if (inst.input) {
+			inst.input.val(clear ? "" : this._formatDate(inst));
+		}
+	},
+
+	/* Retrieve the date(s) directly. */
+	_getDate: function(inst) {
+		var startDate = (!inst.currentYear || (inst.input && inst.input.val() === "") ? null :
+			this._daylightSavingAdjust(new Date(
+			inst.currentYear, inst.currentMonth, inst.currentDay)));
+			return startDate;
+	},
+
+	/* Attach the onxxx handlers.  These are declared statically so
+	 * they work with static code transformers like Caja.
+	 */
+	_attachHandlers: function(inst) {
+		var stepMonths = this._get(inst, "stepMonths"),
+			id = "#" + inst.id.replace( /\\\\/g, "\\" );
+		inst.dpDiv.find("[data-handler]").map(function () {
+			var handler = {
+				prev: function () {
+					$.datepicker._adjustDate(id, -stepMonths, "M");
+				},
+				next: function () {
+					$.datepicker._adjustDate(id, +stepMonths, "M");
+				},
+				hide: function () {
+					$.datepicker._hideDatepicker();
+				},
+				today: function () {
+					$.datepicker._gotoToday(id);
+				},
+				selectDay: function () {
+					$.datepicker._selectDay(id, +this.getAttribute("data-month"), +this.getAttribute("data-year"), this);
+					return false;
+				},
+				selectMonth: function () {
+					$.datepicker._selectMonthYear(id, this, "M");
+					return false;
+				},
+				selectYear: function () {
+					$.datepicker._selectMonthYear(id, this, "Y");
+					return false;
+				}
+			};
+			$(this).bind(this.getAttribute("data-event"), handler[this.getAttribute("data-handler")]);
+		});
+	},
+
+	/* Generate the HTML for the current state of the date picker. */
+	_generateHTML: function(inst) {
+		var maxDraw, prevText, prev, nextText, next, currentText, gotoDate,
+			controls, buttonPanel, firstDay, showWeek, dayNames, dayNamesMin,
+			monthNames, monthNamesShort, beforeShowDay, showOtherMonths,
+			selectOtherMonths, defaultDate, html, dow, row, group, col, selectedDate,
+			cornerClass, calender, thead, day, daysInMonth, leadDays, curRows, numRows,
+			printDate, dRow, tbody, daySettings, otherMonth, unselectable,
+			tempDate = new Date(),
+			today = this._daylightSavingAdjust(
+				new Date(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate())), // clear time
+			isRTL = this._get(inst, "isRTL"),
+			showButtonPanel = this._get(inst, "showButtonPanel"),
+			hideIfNoPrevNext = this._get(inst, "hideIfNoPrevNext"),
+			navigationAsDateFormat = this._get(inst, "navigationAsDateFormat"),
+			numMonths = this._getNumberOfMonths(inst),
+			showCurrentAtPos = this._get(inst, "showCurrentAtPos"),
+			stepMonths = this._get(inst, "stepMonths"),
+			isMultiMonth = (numMonths[0] !== 1 || numMonths[1] !== 1),
+			currentDate = this._daylightSavingAdjust((!inst.currentDay ? new Date(9999, 9, 9) :
+				new Date(inst.currentYear, inst.currentMonth, inst.currentDay))),
+			minDate = this._getMinMaxDate(inst, "min"),
+			maxDate = this._getMinMaxDate(inst, "max"),
+			drawMonth = inst.drawMonth - showCurrentAtPos,
+			drawYear = inst.drawYear;
+
+		if (drawMonth < 0) {
+			drawMonth += 12;
+			drawYear--;
+		}
+		if (maxDate) {
+			maxDraw = this._daylightSavingAdjust(new Date(maxDate.getFullYear(),
+				maxDate.getMonth() - (numMonths[0] * numMonths[1]) + 1, maxDate.getDate()));
+			maxDraw = (minDate && maxDraw < minDate ? minDate : maxDraw);
+			while (this._daylightSavingAdjust(new Date(drawYear, drawMonth, 1)) > maxDraw) {
+				drawMonth--;
+				if (drawMonth < 0) {
+					drawMonth = 11;
+					drawYear--;
+				}
+			}
+		}
+		inst.drawMonth = drawMonth;
+		inst.drawYear = drawYear;
+
+		prevText = this._get(inst, "prevText");
+		prevText = (!navigationAsDateFormat ? prevText : this.formatDate(prevText,
+			this._daylightSavingAdjust(new Date(drawYear, drawMonth - stepMonths, 1)),
+			this._getFormatConfig(inst)));
+
+		prev = (this._canAdjustMonth(inst, -1, drawYear, drawMonth) ?
+			"<a class='ui-datepicker-prev ui-corner-all' data-handler='prev' data-event='click'" +
+			" title='" + prevText + "'><span class='ui-icon ui-icon-circle-triangle-" + ( isRTL ? "e" : "w") + "'>" + prevText + "</span></a>" :
+			(hideIfNoPrevNext ? "" : "<a class='ui-datepicker-prev ui-corner-all ui-state-disabled' title='"+ prevText +"'><span class='ui-icon ui-icon-circle-triangle-" + ( isRTL ? "e" : "w") + "'>" + prevText + "</span></a>"));
+
+		nextText = this._get(inst, "nextText");
+		nextText = (!navigationAsDateFormat ? nextText : this.formatDate(nextText,
+			this._daylightSavingAdjust(new Date(drawYear, drawMonth + stepMonths, 1)),
+			this._getFormatConfig(inst)));
+
+		next = (this._canAdjustMonth(inst, +1, drawYear, drawMonth) ?
+			"<a class='ui-datepicker-next ui-corner-all' data-handler='next' data-event='click'" +
+			" title='" + nextText + "'><span class='ui-icon ui-icon-circle-triangle-" + ( isRTL ? "w" : "e") + "'>" + nextText + "</span></a>" :
+			(hideIfNoPrevNext ? "" : "<a class='ui-datepicker-next ui-corner-all ui-state-disabled' title='"+ nextText + "'><span class='ui-icon ui-icon-circle-triangle-" + ( isRTL ? "w" : "e") + "'>" + nextText + "</span></a>"));
+
+		currentText = this._get(inst, "currentText");
+		gotoDate = (this._get(inst, "gotoCurrent") && inst.currentDay ? currentDate : today);
+		currentText = (!navigationAsDateFormat ? currentText :
+			this.formatDate(currentText, gotoDate, this._getFormatConfig(inst)));
+
+		controls = (!inst.inline ? "<button type='button' class='ui-datepicker-close ui-state-default ui-priority-primary ui-corner-all' data-handler='hide' data-event='click'>" +
+			this._get(inst, "closeText") + "</button>" : "");
+
+		buttonPanel = (showButtonPanel) ? "<div class='ui-datepicker-buttonpane ui-widget-content'>" + (isRTL ? controls : "") +
+			(this._isInRange(inst, gotoDate) ? "<button type='button' class='ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all' data-handler='today' data-event='click'" +
+			">" + currentText + "</button>" : "") + (isRTL ? "" : controls) + "</div>" : "";
+
+		firstDay = parseInt(this._get(inst, "firstDay"),10);
+		firstDay = (isNaN(firstDay) ? 0 : firstDay);
+
+		showWeek = this._get(inst, "showWeek");
+		dayNames = this._get(inst, "dayNames");
+		dayNamesMin = this._get(inst, "dayNamesMin");
+		monthNames = this._get(inst, "monthNames");
+		monthNamesShort = this._get(inst, "monthNamesShort");
+		beforeShowDay = this._get(inst, "beforeShowDay");
+		showOtherMonths = this._get(inst, "showOtherMonths");
+		selectOtherMonths = this._get(inst, "selectOtherMonths");
+		defaultDate = this._getDefaultDate(inst);
+		html = "";
+		dow;
+		for (row = 0; row < numMonths[0]; row++) {
+			group = "";
+			this.maxRows = 4;
+			for (col = 0; col < numMonths[1]; col++) {
+				selectedDate = this._daylightSavingAdjust(new Date(drawYear, drawMonth, inst.selectedDay));
+				cornerClass = " ui-corner-all";
+				calender = "";
+				if (isMultiMonth) {
+					calender += "<div class='ui-datepicker-group";
+					if (numMonths[1] > 1) {
+						switch (col) {
+							case 0: calender += " ui-datepicker-group-first";
+								cornerClass = " ui-corner-" + (isRTL ? "right" : "left"); break;
+							case numMonths[1]-1: calender += " ui-datepicker-group-last";
+								cornerClass = " ui-corner-" + (isRTL ? "left" : "right"); break;
+							default: calender += " ui-datepicker-group-middle"; cornerClass = ""; break;
+						}
+					}
+					calender += "'>";
+				}
+				calender += "<div class='ui-datepicker-header ui-widget-header ui-helper-clearfix" + cornerClass + "'>" +
+					(/all|left/.test(cornerClass) && row === 0 ? (isRTL ? next : prev) : "") +
+					(/all|right/.test(cornerClass) && row === 0 ? (isRTL ? prev : next) : "") +
+					this._generateMonthYearHeader(inst, drawMonth, drawYear, minDate, maxDate,
+					row > 0 || col > 0, monthNames, monthNamesShort) + // draw month headers
+					"</div><table class='ui-datepicker-calendar'><thead>" +
+					"<tr>";
+				thead = (showWeek ? "<th class='ui-datepicker-week-col'>" + this._get(inst, "weekHeader") + "</th>" : "");
+				for (dow = 0; dow < 7; dow++) { // days of the week
+					day = (dow + firstDay) % 7;
+					thead += "<th scope='col'" + ((dow + firstDay + 6) % 7 >= 5 ? " class='ui-datepicker-week-end'" : "") + ">" +
+						"<span title='" + dayNames[day] + "'>" + dayNamesMin[day] + "</span></th>";
+				}
+				calender += thead + "</tr></thead><tbody>";
+				daysInMonth = this._getDaysInMonth(drawYear, drawMonth);
+				if (drawYear === inst.selectedYear && drawMonth === inst.selectedMonth) {
+					inst.selectedDay = Math.min(inst.selectedDay, daysInMonth);
+				}
+				leadDays = (this._getFirstDayOfMonth(drawYear, drawMonth) - firstDay + 7) % 7;
+				curRows = Math.ceil((leadDays + daysInMonth) / 7); // calculate the number of rows to generate
+				numRows = (isMultiMonth ? this.maxRows > curRows ? this.maxRows : curRows : curRows); //If multiple months, use the higher number of rows (see #7043)
+				this.maxRows = numRows;
+				printDate = this._daylightSavingAdjust(new Date(drawYear, drawMonth, 1 - leadDays));
+				for (dRow = 0; dRow < numRows; dRow++) { // create date picker rows
+					calender += "<tr>";
+					tbody = (!showWeek ? "" : "<td class='ui-datepicker-week-col'>" +
+						this._get(inst, "calculateWeek")(printDate) + "</td>");
+					for (dow = 0; dow < 7; dow++) { // create date picker days
+						daySettings = (beforeShowDay ?
+							beforeShowDay.apply((inst.input ? inst.input[0] : null), [printDate]) : [true, ""]);
+						otherMonth = (printDate.getMonth() !== drawMonth);
+						unselectable = (otherMonth && !selectOtherMonths) || !daySettings[0] ||
+							(minDate && printDate < minDate) || (maxDate && printDate > maxDate);
+						tbody += "<td class='" +
+							((dow + firstDay + 6) % 7 >= 5 ? " ui-datepicker-week-end" : "") + // highlight weekends
+							(otherMonth ? " ui-datepicker-other-month" : "") + // highlight days from other months
+							((printDate.getTime() === selectedDate.getTime() && drawMonth === inst.selectedMonth && inst._keyEvent) || // user pressed key
+							(defaultDate.getTime() === printDate.getTime() && defaultDate.getTime() === selectedDate.getTime()) ?
+							// or defaultDate is current printedDate and defaultDate is selectedDate
+							" " + this._dayOverClass : "") + // highlight selected day
+							(unselectable ? " " + this._unselectableClass + " ui-state-disabled": "") +  // highlight unselectable days
+							(otherMonth && !showOtherMonths ? "" : " " + daySettings[1] + // highlight custom dates
+							(printDate.getTime() === currentDate.getTime() ? " " + this._currentClass : "") + // highlight selected day
+							(printDate.getTime() === today.getTime() ? " ui-datepicker-today" : "")) + "'" + // highlight today (if different)
+							((!otherMonth || showOtherMonths) && daySettings[2] ? " title='" + daySettings[2].replace(/'/g, "&#39;") + "'" : "") + // cell title
+							(unselectable ? "" : " data-handler='selectDay' data-event='click' data-month='" + printDate.getMonth() + "' data-year='" + printDate.getFullYear() + "'") + ">" + // actions
+							(otherMonth && !showOtherMonths ? "&#xa0;" : // display for other months
+							(unselectable ? "<span class='ui-state-default'>" + printDate.getDate() + "</span>" : "<a class='ui-state-default" +
+							(printDate.getTime() === today.getTime() ? " ui-state-highlight" : "") +
+							(printDate.getTime() === currentDate.getTime() ? " ui-state-active" : "") + // highlight selected day
+							(otherMonth ? " ui-priority-secondary" : "") + // distinguish dates from other months
+							"' href='#'>" + printDate.getDate() + "</a>")) + "</td>"; // display selectable date
+						printDate.setDate(printDate.getDate() + 1);
+						printDate = this._daylightSavingAdjust(printDate);
+					}
+					calender += tbody + "</tr>";
+				}
+				drawMonth++;
+				if (drawMonth > 11) {
+					drawMonth = 0;
+					drawYear++;
+				}
+				calender += "</tbody></table>" + (isMultiMonth ? "</div>" +
+							((numMonths[0] > 0 && col === numMonths[1]-1) ? "<div class='ui-datepicker-row-break'></div>" : "") : "");
+				group += calender;
+			}
+			html += group;
+		}
+		html += buttonPanel;
+		inst._keyEvent = false;
+		return html;
+	},
+
+	/* Generate the month and year header. */
+	_generateMonthYearHeader: function(inst, drawMonth, drawYear, minDate, maxDate,
+			secondary, monthNames, monthNamesShort) {
+
+		var inMinYear, inMaxYear, month, years, thisYear, determineYear, year, endYear,
+			changeMonth = this._get(inst, "changeMonth"),
+			changeYear = this._get(inst, "changeYear"),
+			showMonthAfterYear = this._get(inst, "showMonthAfterYear"),
+			html = "<div class='ui-datepicker-title'>",
+			monthHtml = "";
+
+		// month selection
+		if (secondary || !changeMonth) {
+			monthHtml += "<span class='ui-datepicker-month'>" + monthNames[drawMonth] + "</span>";
+		} else {
+			inMinYear = (minDate && minDate.getFullYear() === drawYear);
+			inMaxYear = (maxDate && maxDate.getFullYear() === drawYear);
+			monthHtml += "<select class='ui-datepicker-month' data-handler='selectMonth' data-event='change'>";
+			for ( month = 0; month < 12; month++) {
+				if ((!inMinYear || month >= minDate.getMonth()) && (!inMaxYear || month <= maxDate.getMonth())) {
+					monthHtml += "<option value='" + month + "'" +
+						(month === drawMonth ? " selected='selected'" : "") +
+						">" + monthNamesShort[month] + "</option>";
+				}
+			}
+			monthHtml += "</select>";
+		}
+
+		if (!showMonthAfterYear) {
+			html += monthHtml + (secondary || !(changeMonth && changeYear) ? "&#xa0;" : "");
+		}
+
+		// year selection
+		if ( !inst.yearshtml ) {
+			inst.yearshtml = "";
+			if (secondary || !changeYear) {
+				html += "<span class='ui-datepicker-year'>" + drawYear + "</span>";
+			} else {
+				// determine range of years to display
+				years = this._get(inst, "yearRange").split(":");
+				thisYear = new Date().getFullYear();
+				determineYear = function(value) {
+					var year = (value.match(/c[+\-].*/) ? drawYear + parseInt(value.substring(1), 10) :
+						(value.match(/[+\-].*/) ? thisYear + parseInt(value, 10) :
+						parseInt(value, 10)));
+					return (isNaN(year) ? thisYear : year);
+				};
+				year = determineYear(years[0]);
+				endYear = Math.max(year, determineYear(years[1] || ""));
+				year = (minDate ? Math.max(year, minDate.getFullYear()) : year);
+				endYear = (maxDate ? Math.min(endYear, maxDate.getFullYear()) : endYear);
+				inst.yearshtml += "<select class='ui-datepicker-year' data-handler='selectYear' data-event='change'>";
+				for (; year <= endYear; year++) {
+					inst.yearshtml += "<option value='" + year + "'" +
+						(year === drawYear ? " selected='selected'" : "") +
+						">" + year + "</option>";
+				}
+				inst.yearshtml += "</select>";
+
+				html += inst.yearshtml;
+				inst.yearshtml = null;
+			}
+		}
+
+		html += this._get(inst, "yearSuffix");
+		if (showMonthAfterYear) {
+			html += (secondary || !(changeMonth && changeYear) ? "&#xa0;" : "") + monthHtml;
+		}
+		html += "</div>"; // Close datepicker_header
+		return html;
+	},
+
+	/* Adjust one of the date sub-fields. */
+	_adjustInstDate: function(inst, offset, period) {
+		var year = inst.drawYear + (period === "Y" ? offset : 0),
+			month = inst.drawMonth + (period === "M" ? offset : 0),
+			day = Math.min(inst.selectedDay, this._getDaysInMonth(year, month)) + (period === "D" ? offset : 0),
+			date = this._restrictMinMax(inst, this._daylightSavingAdjust(new Date(year, month, day)));
+
+		inst.selectedDay = date.getDate();
+		inst.drawMonth = inst.selectedMonth = date.getMonth();
+		inst.drawYear = inst.selectedYear = date.getFullYear();
+		if (period === "M" || period === "Y") {
+			this._notifyChange(inst);
+		}
+	},
+
+	/* Ensure a date is within any min/max bounds. */
+	_restrictMinMax: function(inst, date) {
+		var minDate = this._getMinMaxDate(inst, "min"),
+			maxDate = this._getMinMaxDate(inst, "max"),
+			newDate = (minDate && date < minDate ? minDate : date);
+		return (maxDate && newDate > maxDate ? maxDate : newDate);
+	},
+
+	/* Notify change of month/year. */
+	_notifyChange: function(inst) {
+		var onChange = this._get(inst, "onChangeMonthYear");
+		if (onChange) {
+			onChange.apply((inst.input ? inst.input[0] : null),
+				[inst.selectedYear, inst.selectedMonth + 1, inst]);
+		}
+	},
+
+	/* Determine the number of months to show. */
+	_getNumberOfMonths: function(inst) {
+		var numMonths = this._get(inst, "numberOfMonths");
+		return (numMonths == null ? [1, 1] : (typeof numMonths === "number" ? [1, numMonths] : numMonths));
+	},
+
+	/* Determine the current maximum date - ensure no time components are set. */
+	_getMinMaxDate: function(inst, minMax) {
+		return this._determineDate(inst, this._get(inst, minMax + "Date"), null);
+	},
+
+	/* Find the number of days in a given month. */
+	_getDaysInMonth: function(year, month) {
+		return 32 - this._daylightSavingAdjust(new Date(year, month, 32)).getDate();
+	},
+
+	/* Find the day of the week of the first of a month. */
+	_getFirstDayOfMonth: function(year, month) {
+		return new Date(year, month, 1).getDay();
+	},
+
+	/* Determines if we should allow a "next/prev" month display change. */
+	_canAdjustMonth: function(inst, offset, curYear, curMonth) {
+		var numMonths = this._getNumberOfMonths(inst),
+			date = this._daylightSavingAdjust(new Date(curYear,
+			curMonth + (offset < 0 ? offset : numMonths[0] * numMonths[1]), 1));
+
+		if (offset < 0) {
+			date.setDate(this._getDaysInMonth(date.getFullYear(), date.getMonth()));
+		}
+		return this._isInRange(inst, date);
+	},
+
+	/* Is the given date in the accepted range? */
+	_isInRange: function(inst, date) {
+		var yearSplit, currentYear,
+			minDate = this._getMinMaxDate(inst, "min"),
+			maxDate = this._getMinMaxDate(inst, "max"),
+			minYear = null,
+			maxYear = null,
+			years = this._get(inst, "yearRange");
+			if (years){
+				yearSplit = years.split(":");
+				currentYear = new Date().getFullYear();
+				minYear = parseInt(yearSplit[0], 10);
+				maxYear = parseInt(yearSplit[1], 10);
+				if ( yearSplit[0].match(/[+\-].*/) ) {
+					minYear += currentYear;
+				}
+				if ( yearSplit[1].match(/[+\-].*/) ) {
+					maxYear += currentYear;
+				}
+			}
+
+		return ((!minDate || date.getTime() >= minDate.getTime()) &&
+			(!maxDate || date.getTime() <= maxDate.getTime()) &&
+			(!minYear || date.getFullYear() >= minYear) &&
+			(!maxYear || date.getFullYear() <= maxYear));
+	},
+
+	/* Provide the configuration settings for formatting/parsing. */
+	_getFormatConfig: function(inst) {
+		var shortYearCutoff = this._get(inst, "shortYearCutoff");
+		shortYearCutoff = (typeof shortYearCutoff !== "string" ? shortYearCutoff :
+			new Date().getFullYear() % 100 + parseInt(shortYearCutoff, 10));
+		return {shortYearCutoff: shortYearCutoff,
+			dayNamesShort: this._get(inst, "dayNamesShort"), dayNames: this._get(inst, "dayNames"),
+			monthNamesShort: this._get(inst, "monthNamesShort"), monthNames: this._get(inst, "monthNames")};
+	},
+
+	/* Format the given date for display. */
+	_formatDate: function(inst, day, month, year) {
+		if (!day) {
+			inst.currentDay = inst.selectedDay;
+			inst.currentMonth = inst.selectedMonth;
+			inst.currentYear = inst.selectedYear;
+		}
+		var date = (day ? (typeof day === "object" ? day :
+			this._daylightSavingAdjust(new Date(year, month, day))) :
+			this._daylightSavingAdjust(new Date(inst.currentYear, inst.currentMonth, inst.currentDay)));
+		return this.formatDate(this._get(inst, "dateFormat"), date, this._getFormatConfig(inst));
+	}
+});
+
+/*
+ * Bind hover events for datepicker elements.
+ * Done via delegate so the binding only occurs once in the lifetime of the parent div.
+ * Global datepicker_instActive, set by _updateDatepicker allows the handlers to find their way back to the active picker.
+ */
+function datepicker_bindHover(dpDiv) {
+	var selector = "button, .ui-datepicker-prev, .ui-datepicker-next, .ui-datepicker-calendar td a";
+	return dpDiv.delegate(selector, "mouseout", function() {
+			$(this).removeClass("ui-state-hover");
+			if (this.className.indexOf("ui-datepicker-prev") !== -1) {
+				$(this).removeClass("ui-datepicker-prev-hover");
+			}
+			if (this.className.indexOf("ui-datepicker-next") !== -1) {
+				$(this).removeClass("ui-datepicker-next-hover");
+			}
+		})
+		.delegate( selector, "mouseover", datepicker_handleMouseover );
+}
+
+function datepicker_handleMouseover() {
+	if (!$.datepicker._isDisabledDatepicker( datepicker_instActive.inline? datepicker_instActive.dpDiv.parent()[0] : datepicker_instActive.input[0])) {
+		$(this).parents(".ui-datepicker-calendar").find("a").removeClass("ui-state-hover");
+		$(this).addClass("ui-state-hover");
+		if (this.className.indexOf("ui-datepicker-prev") !== -1) {
+			$(this).addClass("ui-datepicker-prev-hover");
+		}
+		if (this.className.indexOf("ui-datepicker-next") !== -1) {
+			$(this).addClass("ui-datepicker-next-hover");
+		}
+	}
+}
+
+/* jQuery extend now ignores nulls! */
+function datepicker_extendRemove(target, props) {
+	$.extend(target, props);
+	for (var name in props) {
+		if (props[name] == null) {
+			target[name] = props[name];
+		}
+	}
+	return target;
+}
+
+/* Invoke the datepicker functionality.
+   @param  options  string - a command, optionally followed by additional parameters or
+					Object - settings for attaching new datepicker functionality
+   @return  jQuery object */
+$.fn.datepicker = function(options){
+
+	/* Verify an empty collection wasn't passed - Fixes #6976 */
+	if ( !this.length ) {
+		return this;
+	}
+
+	/* Initialise the date picker. */
+	if (!$.datepicker.initialized) {
+		$(document).mousedown($.datepicker._checkExternalClick);
+		$.datepicker.initialized = true;
+	}
+
+	/* Append datepicker main container to body if not exist. */
+	if ($("#"+$.datepicker._mainDivId).length === 0) {
+		$("body").append($.datepicker.dpDiv);
+	}
+
+	var otherArgs = Array.prototype.slice.call(arguments, 1);
+	if (typeof options === "string" && (options === "isDisabled" || options === "getDate" || options === "widget")) {
+		return $.datepicker["_" + options + "Datepicker"].
+			apply($.datepicker, [this[0]].concat(otherArgs));
+	}
+	if (options === "option" && arguments.length === 2 && typeof arguments[1] === "string") {
+		return $.datepicker["_" + options + "Datepicker"].
+			apply($.datepicker, [this[0]].concat(otherArgs));
+	}
+	return this.each(function() {
+		typeof options === "string" ?
+			$.datepicker["_" + options + "Datepicker"].
+				apply($.datepicker, [this].concat(otherArgs)) :
+			$.datepicker._attachDatepicker(this, options);
+	});
+};
+
+$.datepicker = new Datepicker(); // singleton instance
+$.datepicker.initialized = false;
+$.datepicker.uuid = new Date().getTime();
+$.datepicker.version = "1.11.4";
+
+var datepicker = $.datepicker;
+
+}));
+$(document).ready(function() {
+
+	$('#btn-datos').click(function(event) {
+		datosDonde();
+		datosHuesped();
+
+		if(datosDonde() && datosHuesped()){
+			window.location.href = "resultado.html";
+			var lugar = $("#donde").val();
+			var llegada = $("#llegada").val();
+			var salida = $("#salida").val();
+			var personas = $("#cantidad").val();
+
+			localStorage.setItem("lugar", lugar);
+			localStorage.setItem("llegada", llegada);
+			localStorage.setItem("salida", salida);
+			localStorage.setItem("personas", personas);
+		}
+	});
+
+	//configuración de idioma del plugin
+	$.datepicker.setDefaults($.datepicker.regional["es"]);
+
+	//plugin que permite poner un calendario en un input
+	$("#llegada").datepicker({
+		firstDay: 1,
+		monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio','Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+		dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+		dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié;', 'Juv', 'Vie', 'Sáb'],
+		dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+		weekHeader: 'Sm',
+		dateFormat: 'dd/mm/yy',
+		onSelect: function (date) {
+		alert(date)
+		}
+	});
+	$("#salida").datepicker({
+		firstDay: 1,
+		monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio','Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+		dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+		dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié;', 'Juv', 'Vie', 'Sáb'],
+		dayNamesMin: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+		weekHeader: 'Sm',
+		dateFormat: 'dd/mm/yy',
+		onSelect: function (date) {
+		alert(date)
+		}
+	});
+
+});
+
+//inputs de buscador validados
+var datosDonde = function (){
+	var donde = $("#donde").val();
+
+	if(donde.length == 0){
+		$("#donde").append(alert("Debes escribir un lugar"));
+		//$(".tooltipped").show();
+		return false;
+	} else{
+		return true;
+	}
+}
+
+var datosHuesped = function (){
+	var huesped = $("#cantidad").val();
+
+	if(huesped.length == 0){
+		$("#cantidad").append(alert("Debes escribir un lugar"));
+		//$(".tooltipped").show();
+		return false;
+	} else{
+		return true;
+	}
+}
+var data = {
+  "search_results":
+  [
+    {"listing":
+     {"bathrooms":1.0,
+      "bedrooms":1,
+      "beds":1,
+      "city":"Carnelian Bay",
+      "distance":null,
+      "extra_host_languages":[],"id":8211487,
+      "instant_bookable":true,
+      "is_business_travel_ready":false,
+      "is_family_preferred":false,
+      "is_new_listing":false,
+      "lat":39.243556560884905,
+      "listing_tags":[],
+      "lng":-120.07500666183107, 
+      "localized_city":"Carnelian Bay",
+      "name":"queen /w bath & lake Tahoe view",
+      "neighborhood":"North Lake Tahoe",
+      "person_capacity":2,
+      "picture_count":14,
+      "picture_url":"https://a0.muscache.com/im/pictures/57290fb8-0bbd-429e-ac2a-2bfda4bf37fe.jpg?aki_policy=large",
+      "primary_host":
+      {
+        "first_name":"Marty",
+        "has_profile_pic":true,
+        "id":43299326,
+        "picture_url":"https://a0.muscache.com/im/users/43299326/profile_pic/1441323200/original.jpg?aki_policy=profile_x_medium",
+        "smart_name":"Marty",
+        "thumbnail_url":"https://a0.muscache.com/im/users/43299326/profile_pic/1441323200/original.jpg?aki_policy=profile_small",
+        "is_superhost":true
+      },
+      "property_type":"House",
+      "property_type_id":2,
+      "public_address":"Carnelian Bay, CA, United States",
+      "reviews_count":160,
+      "room_type":"Private room",
+      "room_type_category":"private_room",
+      "scrim_color":"#523F38",
+      "star_rating":5.0,
+      "thumbnail_url":"https://a0.muscache.com/im/pictures/57290fb8-0bbd-429e-ac2a-2bfda4bf37fe.jpg?aki_policy=small",
+      "user":
+      {
+        "first_name":"Marty",
+        "has_profile_pic":true,
+        "id":43299326,
+        "picture_url":"https://a0.muscache.com/im/users/43299326/profile_pic/1441323200/original.jpg?aki_policy=profile_x_medium",
+        "smart_name":"Marty",
+        "thumbnail_url":"https://a0.muscache.com/im/users/43299326/profile_pic/1441323200/original.jpg?aki_policy=profile_small",
+        "is_superhost":true
+      },
+      "user_id":43299326,"xl_picture_url":"https://a0.muscache.com/im/pictures/57290fb8-0bbd-429e-ac2a-2bfda4bf37fe.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAO0lEQVQIHQEwAM//AZyDchoeIhchJxcbG93PxgG1moHq+Qbf6OsaEwcfMBIBj25T1uX6AP8ANDg9NDYsuKESUABUewAAAAAASUVORK5CYII=","picture_urls":["https://a0.muscache.com/im/pictures/57290fb8-0bbd-429e-ac2a-2bfda4bf37fe.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/288fdbe2-72bb-47c2-b653-f3ec3a4c9bce.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/69594ad4-30fa-489f-ab7e-0506c96dba11.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f4c9fdbf-22f7-4663-866b-21b216e5bafe.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/4d6f65d0-e3c9-4698-bb31-40daa7cb746e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b4598e41-822a-419a-a979-f1f23f424a67.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ca20b28a-0953-4040-a3ae-f908371f39f9.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6187c930-e2ef-4147-8a5d-893311b7d6c8.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/313abef8-f0cf-4277-81b4-f721d6bb39ef.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9fc0c5b6-75be-45b4-8b49-18fc5f7c8601.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1cb2a6bc-f22c-48ff-bd80-768d7aa8f830.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9e23102b-6afd-4291-9d51-efa94cb643ec.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/73e15d8b-8efe-4231-affe-c75a28e1c2ee.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e3444692-aa35-48e0-b85d-a583105b360b.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/57290fb8-0bbd-429e-ac2a-2bfda4bf37fe.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/288fdbe2-72bb-47c2-b653-f3ec3a4c9bce.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/69594ad4-30fa-489f-ab7e-0506c96dba11.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f4c9fdbf-22f7-4663-866b-21b216e5bafe.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/4d6f65d0-e3c9-4698-bb31-40daa7cb746e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b4598e41-822a-419a-a979-f1f23f424a67.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ca20b28a-0953-4040-a3ae-f908371f39f9.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6187c930-e2ef-4147-8a5d-893311b7d6c8.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/313abef8-f0cf-4277-81b4-f721d6bb39ef.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9fc0c5b6-75be-45b4-8b49-18fc5f7c8601.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1cb2a6bc-f22c-48ff-bd80-768d7aa8f830.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9e23102b-6afd-4291-9d51-efa94cb643ec.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/73e15d8b-8efe-4231-affe-c75a28e1c2ee.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e3444692-aa35-48e0-b85d-a583105b360b.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":85,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":85,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":0,"beds":1,"city":"Tahoma","distance":null,"extra_host_languages":[],"id":8458418,"instant_bookable":false,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":false,"lat":39.060117774974955,"listing_tags":[],"lng":-120.13074106783273,"localized_city":"Tahoma","name":"Tiny Tahoe Rental","neighborhood":"Tahoma","person_capacity":2,"picture_count":16,"picture_url":"https://a0.muscache.com/im/pictures/4c3eda21-b384-41c7-a91f-bf7bded7d69c.jpg?aki_policy=large","primary_host":{"first_name":"Amy","has_profile_pic":true,"id":44524741,"picture_url":"https://a0.muscache.com/im/pictures/65c32517-864c-408a-8bb5-84f48a24f601.jpg?aki_policy=profile_x_medium","smart_name":"Amy","thumbnail_url":"https://a0.muscache.com/im/pictures/65c32517-864c-408a-8bb5-84f48a24f601.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Cabin","property_type_id":4,"public_address":"Tahoma, CA, United States","reviews_count":64,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#2E2017","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/4c3eda21-b384-41c7-a91f-bf7bded7d69c.jpg?aki_policy=small","user":{"first_name":"Amy","has_profile_pic":true,"id":44524741,"picture_url":"https://a0.muscache.com/im/pictures/65c32517-864c-408a-8bb5-84f48a24f601.jpg?aki_policy=profile_x_medium","smart_name":"Amy","thumbnail_url":"https://a0.muscache.com/im/pictures/65c32517-864c-408a-8bb5-84f48a24f601.jpg?aki_policy=profile_small","is_superhost":true},"user_id":44524741,"xl_picture_url":"https://a0.muscache.com/im/pictures/4c3eda21-b384-41c7-a91f-bf7bded7d69c.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAO0lEQVQIHQEwAM//AcfIxA4PEffy6tjX2/r18QG6u7cVBwz2+vK/wL0eHhwBfmlXKTNA9Pbx5NnS+f3+pZIcxEVv0xoAAAAASUVORK5CYII=","picture_urls":["https://a0.muscache.com/im/pictures/4c3eda21-b384-41c7-a91f-bf7bded7d69c.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ecd7a1bc-816a-47a3-90e4-962d18d0cfa6.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/67f66840-aba2-4079-be15-77b8d7c92440.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/83304327-5767-4355-89d6-f8a62f5370ea.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/854b664b-479b-441f-bdb5-db283d955e85.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a4d85e6d-6f71-45a7-acd2-90dc6e193d38.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/fa67d8c2-1b4b-4769-a9a7-6f70b39df2db.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/76b707b7-19af-47a0-b369-2c8f5077c895.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/71a0bb1c-da90-4856-b856-98227a6126ef.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/0b8bfaa0-43c1-413e-9123-0571013ac3ab.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/c15f60d9-6598-4143-b722-bdb80bcf926b.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f1bf8154-8f21-4d87-adbc-f9ed9b7483bb.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/5f075853-110e-4f60-ab71-3d8f2f3ce108.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/de7b1778-2ac3-4813-adf1-e072970f7dd7.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/be24bc82-dbb4-4369-9d6a-df720cc7ef1d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/303ebfa8-80f1-4cf2-97c3-fc7995ad6f64.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/4c3eda21-b384-41c7-a91f-bf7bded7d69c.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ecd7a1bc-816a-47a3-90e4-962d18d0cfa6.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/67f66840-aba2-4079-be15-77b8d7c92440.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/83304327-5767-4355-89d6-f8a62f5370ea.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/854b664b-479b-441f-bdb5-db283d955e85.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a4d85e6d-6f71-45a7-acd2-90dc6e193d38.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/fa67d8c2-1b4b-4769-a9a7-6f70b39df2db.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/76b707b7-19af-47a0-b369-2c8f5077c895.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/71a0bb1c-da90-4856-b856-98227a6126ef.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/0b8bfaa0-43c1-413e-9123-0571013ac3ab.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/c15f60d9-6598-4143-b722-bdb80bcf926b.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f1bf8154-8f21-4d87-adbc-f9ed9b7483bb.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/5f075853-110e-4f60-ab71-3d8f2f3ce108.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/de7b1778-2ac3-4813-adf1-e072970f7dd7.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/be24bc82-dbb4-4369-9d6a-df720cc7ef1d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/303ebfa8-80f1-4cf2-97c3-fc7995ad6f64.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":false,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":80,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":80,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":1,"beds":1,"city":"Tahoe City","distance":null,"extra_host_languages":[],"id":6147840,"instant_bookable":true,"is_business_travel_ready":true,"is_family_preferred":false,"is_new_listing":false,"lat":39.1336907218691,"listing_tags":[],"lng":-120.15759062560586,"localized_city":"Tahoe City","name":"Black Bears Den -Tahoe Mtn. Luxury","neighborhood":"Tahoe City","person_capacity":2,"picture_count":18,"picture_url":"https://a0.muscache.com/im/pictures/6dd3d930-58b0-4e68-b0b4-d84618f15fcb.jpg?aki_policy=large","primary_host":{"first_name":"Craig","has_profile_pic":true,"id":31892887,"picture_url":"https://a0.muscache.com/im/users/31892887/profile_pic/1429953977/original.jpg?aki_policy=profile_x_medium","smart_name":"Craig","thumbnail_url":"https://a0.muscache.com/im/users/31892887/profile_pic/1429953977/original.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Apartment","property_type_id":1,"public_address":"Tahoe City, CA, United States","reviews_count":187,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#16110E","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/6dd3d930-58b0-4e68-b0b4-d84618f15fcb.jpg?aki_policy=small","user":{"first_name":"Craig","has_profile_pic":true,"id":31892887,"picture_url":"https://a0.muscache.com/im/users/31892887/profile_pic/1429953977/original.jpg?aki_policy=profile_x_medium","smart_name":"Craig","thumbnail_url":"https://a0.muscache.com/im/users/31892887/profile_pic/1429953977/original.jpg?aki_policy=profile_small","is_superhost":true},"user_id":31892887,"xl_picture_url":"https://a0.muscache.com/im/pictures/6dd3d930-58b0-4e68-b0b4-d84618f15fcb.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAO0lEQVQIHQEwAM//AZxVG//37dz3FQYhLxz+5wGZZTXw49zvDisCFyDz7/EBklQkudTnBRQe9QURJxEDPRsVQxaqLZIAAAAASUVORK5CYII=","picture_urls":["https://a0.muscache.com/im/pictures/6dd3d930-58b0-4e68-b0b4-d84618f15fcb.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80272912/5d2a30e2_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80273257/c8d04894_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80275235/621aa00d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80276938/f78ef129_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80276570/4e1ff19f_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80275444/427ba90c_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e1454d69-cf02-417b-8340-5d9500cfbefd.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80273808/e5d854e4_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80273720/d0c0dc7e_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80273760/b55400a4_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80274887/834f49e3_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80273945/d7504c6b_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80274311/dedfd137_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80274053/7a9f8418_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ad506b1a-eb21-4720-a033-76e6a6f86e9e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/25b16415-c995-47eb-ac40-449ca47c7ec1.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/80274672/f6f9ab26_original.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/6dd3d930-58b0-4e68-b0b4-d84618f15fcb.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80272912/5d2a30e2_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80273257/c8d04894_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80275235/621aa00d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80276938/f78ef129_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80276570/4e1ff19f_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80275444/427ba90c_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e1454d69-cf02-417b-8340-5d9500cfbefd.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80273808/e5d854e4_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80273720/d0c0dc7e_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80273760/b55400a4_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80274887/834f49e3_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80273945/d7504c6b_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80274311/dedfd137_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80274053/7a9f8418_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ad506b1a-eb21-4720-a033-76e6a6f86e9e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/25b16415-c995-47eb-ac40-449ca47c7ec1.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/80274672/f6f9ab26_original.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":125,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":125,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":0,"beds":1,"city":"South Lake Tahoe","distance":null,"extra_host_languages":[],"id":2056659,"instant_bookable":true,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":false,"lat":38.95007757731039,"listing_tags":[],"lng":-119.95370449119342,"localized_city":"South Lake Tahoe","name":"Studio Guest House Hot Tub Wifi ","neighborhood":"South Lake Tahoe","person_capacity":2,"picture_count":24,"picture_url":"https://a0.muscache.com/im/pictures/28132149/9141bc53_original.jpg?aki_policy=large","primary_host":{"first_name":"Sabrina","has_profile_pic":true,"id":10457593,"picture_url":"https://a0.muscache.com/im/users/10457593/profile_pic/1386289116/original.jpg?aki_policy=profile_x_medium","smart_name":"Sabrina","thumbnail_url":"https://a0.muscache.com/im/users/10457593/profile_pic/1386289116/original.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"House","property_type_id":2,"public_address":"South Lake Tahoe, CA, United States","reviews_count":205,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#231B19","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/28132149/9141bc53_original.jpg?aki_policy=small","user":{"first_name":"Sabrina","has_profile_pic":true,"id":10457593,"picture_url":"https://a0.muscache.com/im/users/10457593/profile_pic/1386289116/original.jpg?aki_policy=profile_x_medium","smart_name":"Sabrina","thumbnail_url":"https://a0.muscache.com/im/users/10457593/profile_pic/1386289116/original.jpg?aki_policy=profile_small","is_superhost":true},"user_id":10457593,"xl_picture_url":"https://a0.muscache.com/im/pictures/28132149/9141bc53_original.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAECAIAAADJUWIXAAAAS0lEQVQIHQFAAL//AZSUjPXu8x0gHCgoJre7vgGCf3bw6ekSFhY/Rk7My8cBX05B+/j69wAEJzdE9fLsAWxRPvL6AAMNE+vu89/g4tmtH/h/nmr9AAAAAElFTkSuQmCC","picture_urls":["https://a0.muscache.com/im/pictures/28132149/9141bc53_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475615/92777d04_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/29312595/88193143_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/29312607/13297f98_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/42193480/6c903bea_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/29312567/ebe568da_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/42193412/f388c3d4_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/37426662/e11fb935_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475694/453127a6_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475758/a03a9c55_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476132/af5f91b8_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476464/5baae7a2_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/42193444/28cb5ef2_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475813/f3ecd009_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/42172772/1fe0903f_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475904/b3becc41_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476052/b92c34a1_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41475968/9c2c3668_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476285/e8bb8681_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/32147195/9020d379_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476224/965fc04c_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476105/d61616c6_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476167/6b0c01b1_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/41476343/529942d3_original.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/28132149/9141bc53_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475615/92777d04_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/29312595/88193143_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/29312607/13297f98_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/42193480/6c903bea_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/29312567/ebe568da_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/42193412/f388c3d4_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/37426662/e11fb935_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475694/453127a6_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475758/a03a9c55_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476132/af5f91b8_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476464/5baae7a2_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/42193444/28cb5ef2_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475813/f3ecd009_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/42172772/1fe0903f_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475904/b3becc41_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476052/b92c34a1_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41475968/9c2c3668_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476285/e8bb8681_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/32147195/9020d379_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476224/965fc04c_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476105/d61616c6_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476167/6b0c01b1_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/41476343/529942d3_original.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":99,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":99,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":null,"bedrooms":null,"beds":1,"city":"Incline Village","distance":null,"extra_host_languages":[],"id":15975,"instant_bookable":true,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":false,"lat":39.242649046294204,"listing_tags":[],"lng":-119.93081325454622,"localized_city":"Incline Village","name":"Lovely Studio Apartment Near Lake","neighborhood":"Incline Village","person_capacity":2,"picture_count":28,"picture_url":"https://a0.muscache.com/im/pictures/438057/58687874_original.jpg?aki_policy=large","primary_host":{"first_name":"Rachel (And Benjamin)","has_profile_pic":true,"id":62431,"picture_url":"https://a0.muscache.com/im/users/62431/profile_pic/1279232714/original.jpg?aki_policy=profile_x_medium","smart_name":"Rachel (And Benjamin)","thumbnail_url":"https://a0.muscache.com/im/users/62431/profile_pic/1279232714/original.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Apartment","property_type_id":1,"public_address":"Incline Village, NV, United States","reviews_count":414,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#341D17","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/438057/58687874_original.jpg?aki_policy=small","user":{"first_name":"Rachel (And Benjamin)","has_profile_pic":true,"id":62431,"picture_url":"https://a0.muscache.com/im/users/62431/profile_pic/1279232714/original.jpg?aki_policy=profile_x_medium","smart_name":"Rachel (And Benjamin)","thumbnail_url":"https://a0.muscache.com/im/users/62431/profile_pic/1279232714/original.jpg?aki_policy=profile_small","is_superhost":true},"user_id":62431,"xl_picture_url":"https://a0.muscache.com/im/pictures/438057/58687874_original.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAO0lEQVQIHQEwAM//AaeclhogJAwC/A8G+/3z6AGDZ1YWHycZAuoRFSDu8fQBSjEmJiEeIBMJCQkG8ff6qisRI6aEUQEAAAAASUVORK5CYII=","picture_urls":["https://a0.muscache.com/im/pictures/438057/58687874_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/78238/09a59868_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438053/9a380f1d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/218569/89b5f16d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438051/71dd2fb4_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438052/c40ea35d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438055/0179a7c5_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438054/0de5e54a_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438060/d866dd58_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438056/2e4913ac_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438058/8842819c_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438059/c6f89332_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/438061/e63b2a4d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/218558/0f05bae8_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/218573/9c7b693c_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286986/6378cffd_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286990/a962b9fa_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286991/7583a443_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286992/a288b63a_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286993/ad716623_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286994/5b5216da_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/286996/91a43774_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383924/29910c81_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383925/d2139f25_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383926/a329cd2d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383927/8501539b_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383928/d3cd83b4_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/383933/3c14943f_original.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/438057/58687874_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/78238/09a59868_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438053/9a380f1d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/218569/89b5f16d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438051/71dd2fb4_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438052/c40ea35d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438055/0179a7c5_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438054/0de5e54a_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438060/d866dd58_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438056/2e4913ac_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438058/8842819c_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438059/c6f89332_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/438061/e63b2a4d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/218558/0f05bae8_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/218573/9c7b693c_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286986/6378cffd_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286990/a962b9fa_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286991/7583a443_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286992/a288b63a_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286993/ad716623_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286994/5b5216da_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/286996/91a43774_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383924/29910c81_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383925/d2139f25_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383926/a329cd2d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383927/8501539b_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383928/d3cd83b4_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/383933/3c14943f_original.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":97,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":97,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":0,"beds":1,"city":"Tahoe Vista","distance":null,"extra_host_languages":[],"id":9717564,"instant_bookable":true,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":false,"lat":39.23987422275311,"listing_tags":[],"lng":-120.04977730759039,"localized_city":"Tahoe Vista","name":"Spring skiing is here! Cozy lakeside studio.","neighborhood":"Kings Beach/Tahoe Vista","person_capacity":2,"picture_count":45,"picture_url":"https://a0.muscache.com/im/pictures/bd7a794c-586d-40c6-97ec-e5ce68f693f1.jpg?aki_policy=large","primary_host":{"first_name":"Johnny & Jeanyne","has_profile_pic":true,"id":49994373,"picture_url":"https://a0.muscache.com/im/pictures/c92849a8-e8d7-4051-a06d-c6259a327d1e.jpg?aki_policy=profile_x_medium","smart_name":"Johnny & Jeanyne","thumbnail_url":"https://a0.muscache.com/im/pictures/c92849a8-e8d7-4051-a06d-c6259a327d1e.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Condominium","property_type_id":37,"public_address":"Tahoe Vista, CA, United States","reviews_count":100,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#23241C","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/bd7a794c-586d-40c6-97ec-e5ce68f693f1.jpg?aki_policy=small","user":{"first_name":"Johnny & Jeanyne","has_profile_pic":true,"id":49994373,"picture_url":"https://a0.muscache.com/im/pictures/c92849a8-e8d7-4051-a06d-c6259a327d1e.jpg?aki_policy=profile_x_medium","smart_name":"Johnny & Jeanyne","thumbnail_url":"https://a0.muscache.com/im/pictures/c92849a8-e8d7-4051-a06d-c6259a327d1e.jpg?aki_policy=profile_small","is_superhost":true},"user_id":49994373,"xl_picture_url":"https://a0.muscache.com/im/pictures/bd7a794c-586d-40c6-97ec-e5ce68f693f1.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAOUlEQVQIHWNU11ZlUDD/x8knwviN/fsTRi93JxERIR4OJhZW1t+//jIaGymLSSjYa2vuOHPx29e3AC1nD43k4na3AAAAAElFTkSuQmCC","picture_urls":["https://a0.muscache.com/im/pictures/bd7a794c-586d-40c6-97ec-e5ce68f693f1.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6d4a2174-752f-473c-a552-40c2d8840fe8.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6874a995-efa3-4eb8-bbd9-93aa73366334.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/50a15311-f381-4054-b847-fe50179d829a.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/5c976d85-8290-49d6-989e-2e64befef91c.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e9a42094-eb57-4931-8f57-c54045d9967b.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f2deb8fe-9249-4205-bd68-89ff899e4b9b.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2f378a96-75dc-4519-bb15-bb7a2f75b325.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e0f2dd52-4e0a-470b-87ba-bdbee2815425.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/17ed87de-7fc8-4cab-aa8b-3c178187ad7c.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/79aae942-716b-4492-9d61-8a0dc99f3a82.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/dd21022a-5352-4e6c-b683-dc830f0028d1.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/db0f1c7a-ed5f-42e3-8b18-75b9f7a90a14.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/8babc90b-c7db-443e-8e56-083d0b977d8e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2f6c3cc4-e7b6-4baa-82a8-89fd7733dbf0.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1374f3be-1f54-446f-992a-92dfe338eb18.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/15048a1b-cf02-4717-b147-ae3a4df9cc65.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6a9ff741-c93f-4b6d-baa0-92d38382bbe9.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/984c70b2-82c4-4b50-8d48-17571fbd2520.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/af9cf5f0-fa58-423a-9f46-99e42e82942f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a8853b5c-f283-4806-874a-24428ce36b31.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ca639d5c-db72-4fba-9b0a-8a765b63890d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/abe5e7d9-d20d-4766-b5c0-731f06c3d812.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/824e6fbe-7ff4-4590-b360-c7b1cc4c008a.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/997e9479-6169-4056-b464-9f2dac7cfb4e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/66a36e5d-1ffd-4cec-b5a0-e4b08c7ef42e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f711d207-c5af-4c0b-9e92-0864dfd7a474.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/930577bd-ec63-4efa-ae48-9514dfec71b0.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a17c5ba6-1281-4676-8dbc-04f5df7ac022.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/81267fe0-746f-4bc3-a1c6-815af18825a5.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/394ff06c-cf01-44ef-a0ad-e6c3acc4663e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f70b8c25-0873-4a2a-a923-f4b44300f4e8.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/067e1bd1-bb00-4bb4-b34f-24631190cb65.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2823ed5f-86d1-4b99-a170-3e24a10e15cd.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b048d09e-4942-4907-8c54-e2320094524f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2eea5b21-76fa-4b6e-a4ea-026ce328b714.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/538b58fe-3bf6-48ea-aa1e-5fadb2f527ea.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ab7a8dde-8f5b-453e-aacc-800a12d58a71.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2263b42b-5f6c-496e-bcd3-e2ca585d4bde.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/140badb4-5182-4556-b8f0-b64799a83b82.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2fd0636e-b081-4acf-a083-78f3b3e6c5d0.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b76a8306-7a94-4a28-9977-dba481da0b90.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/99e7ae56-4482-4af5-85b6-4d18a4f8001c.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1e9447f9-5da0-4205-865e-78f1d0b2dfa7.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/bf40f79d-a077-46db-999e-f8de0dc731ff.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/bd7a794c-586d-40c6-97ec-e5ce68f693f1.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6d4a2174-752f-473c-a552-40c2d8840fe8.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6874a995-efa3-4eb8-bbd9-93aa73366334.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/50a15311-f381-4054-b847-fe50179d829a.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/5c976d85-8290-49d6-989e-2e64befef91c.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e9a42094-eb57-4931-8f57-c54045d9967b.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f2deb8fe-9249-4205-bd68-89ff899e4b9b.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2f378a96-75dc-4519-bb15-bb7a2f75b325.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e0f2dd52-4e0a-470b-87ba-bdbee2815425.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/17ed87de-7fc8-4cab-aa8b-3c178187ad7c.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/79aae942-716b-4492-9d61-8a0dc99f3a82.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/dd21022a-5352-4e6c-b683-dc830f0028d1.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/db0f1c7a-ed5f-42e3-8b18-75b9f7a90a14.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/8babc90b-c7db-443e-8e56-083d0b977d8e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2f6c3cc4-e7b6-4baa-82a8-89fd7733dbf0.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1374f3be-1f54-446f-992a-92dfe338eb18.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/15048a1b-cf02-4717-b147-ae3a4df9cc65.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6a9ff741-c93f-4b6d-baa0-92d38382bbe9.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/984c70b2-82c4-4b50-8d48-17571fbd2520.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/af9cf5f0-fa58-423a-9f46-99e42e82942f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a8853b5c-f283-4806-874a-24428ce36b31.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ca639d5c-db72-4fba-9b0a-8a765b63890d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/abe5e7d9-d20d-4766-b5c0-731f06c3d812.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/824e6fbe-7ff4-4590-b360-c7b1cc4c008a.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/997e9479-6169-4056-b464-9f2dac7cfb4e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/66a36e5d-1ffd-4cec-b5a0-e4b08c7ef42e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f711d207-c5af-4c0b-9e92-0864dfd7a474.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/930577bd-ec63-4efa-ae48-9514dfec71b0.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a17c5ba6-1281-4676-8dbc-04f5df7ac022.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/81267fe0-746f-4bc3-a1c6-815af18825a5.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/394ff06c-cf01-44ef-a0ad-e6c3acc4663e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f70b8c25-0873-4a2a-a923-f4b44300f4e8.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/067e1bd1-bb00-4bb4-b34f-24631190cb65.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2823ed5f-86d1-4b99-a170-3e24a10e15cd.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b048d09e-4942-4907-8c54-e2320094524f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2eea5b21-76fa-4b6e-a4ea-026ce328b714.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/538b58fe-3bf6-48ea-aa1e-5fadb2f527ea.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ab7a8dde-8f5b-453e-aacc-800a12d58a71.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2263b42b-5f6c-496e-bcd3-e2ca585d4bde.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/140badb4-5182-4556-b8f0-b64799a83b82.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2fd0636e-b081-4acf-a083-78f3b3e6c5d0.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b76a8306-7a94-4a28-9977-dba481da0b90.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/99e7ae56-4482-4af5-85b6-4d18a4f8001c.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1e9447f9-5da0-4205-865e-78f1d0b2dfa7.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/bf40f79d-a077-46db-999e-f8de0dc731ff.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":69,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":69,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":1,"beds":2,"city":"Kings Beach","distance":null,"extra_host_languages":[],"id":12537998,"instant_bookable":true,"is_business_travel_ready":true,"is_family_preferred":true,"is_new_listing":false,"lat":39.24277666508646,"listing_tags":[],"lng":-120.02741959504581,"localized_city":"Kings Beach","name":"Quiet 1 Bdrm walk to beach & trails","neighborhood":"Kings Beach/Tahoe Vista","person_capacity":4,"picture_count":11,"picture_url":"https://a0.muscache.com/im/pictures/d15aa833-9a85-421d-a0ec-178acba0c944.jpg?aki_policy=large","primary_host":{"first_name":"Catherine","has_profile_pic":true,"id":21697260,"picture_url":"https://a0.muscache.com/im/pictures/569bb98e-b462-4223-b133-03b7d084155f.jpg?aki_policy=profile_x_medium","smart_name":"Catherine","thumbnail_url":"https://a0.muscache.com/im/pictures/569bb98e-b462-4223-b133-03b7d084155f.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Apartment","property_type_id":1,"public_address":"Kings Beach, CA, United States","reviews_count":73,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#25211E","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/d15aa833-9a85-421d-a0ec-178acba0c944.jpg?aki_policy=small","user":{"first_name":"Catherine","has_profile_pic":true,"id":21697260,"picture_url":"https://a0.muscache.com/im/pictures/569bb98e-b462-4223-b133-03b7d084155f.jpg?aki_policy=profile_x_medium","smart_name":"Catherine","thumbnail_url":"https://a0.muscache.com/im/pictures/569bb98e-b462-4223-b133-03b7d084155f.jpg?aki_policy=profile_small","is_superhost":true},"user_id":21697260,"xl_picture_url":"https://a0.muscache.com/im/pictures/d15aa833-9a85-421d-a0ec-178acba0c944.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAECAIAAADJUWIXAAAAS0lEQVQIHQFAAL//ATw+PxAMBxEUGQ8RC9nc0QFNSD0IBAIdGRs+Nh2qussBPTksDgUHIiMjJSUkxdDZAUtLOSQZGBEMBtHZ59vj69T/EkKBghx/AAAAAElFTkSuQmCC","picture_urls":["https://a0.muscache.com/im/pictures/d15aa833-9a85-421d-a0ec-178acba0c944.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ccfe8173-932f-4a34-a47f-dd6731bab290.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/bfa71942-5bd9-487d-b38b-c409814602ed.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/60fc1e28-4ea5-4296-97c7-473396f280f0.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b44e4420-2231-49e8-bf6f-778fa5b92ec9.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/ea61fb60-33aa-4666-b466-9cf113c0f969.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/8f320169-b2e1-444d-8c2b-cb1fa6c39502.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9cee4a82-d0fd-4580-8ae3-da46ce261288.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/872ef2a1-f933-41cc-8749-e321c328fbb9.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/510b5b70-9456-44be-8398-67fc15ea2b97.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/230f748b-46a1-4735-ae7d-6c5afa46cfe6.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/d15aa833-9a85-421d-a0ec-178acba0c944.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ccfe8173-932f-4a34-a47f-dd6731bab290.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/bfa71942-5bd9-487d-b38b-c409814602ed.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/60fc1e28-4ea5-4296-97c7-473396f280f0.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b44e4420-2231-49e8-bf6f-778fa5b92ec9.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/ea61fb60-33aa-4666-b466-9cf113c0f969.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/8f320169-b2e1-444d-8c2b-cb1fa6c39502.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9cee4a82-d0fd-4580-8ae3-da46ce261288.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/872ef2a1-f933-41cc-8749-e321c328fbb9.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/510b5b70-9456-44be-8398-67fc15ea2b97.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/230f748b-46a1-4735-ae7d-6c5afa46cfe6.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":true,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":77,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":77,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":1,"beds":1,"city":"Stateline","distance":null,"extra_host_languages":[],"id":7901932,"instant_bookable":false,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":false,"lat":38.9678864255897,"listing_tags":[],"lng":-119.92657017696784,"localized_city":"Stateline","name":"Comfy Tahoe room w/ snacks, private bath & hot tub","neighborhood":"Kingsbury","person_capacity":2,"picture_count":31,"picture_url":"https://a0.muscache.com/im/pictures/102612709/d8a99f30_original.jpg?aki_policy=large","primary_host":{"first_name":"Kane","has_profile_pic":true,"id":812296,"picture_url":"https://a0.muscache.com/im/users/812296/profile_pic/1441223862/original.jpg?aki_policy=profile_x_medium","smart_name":"Kane","thumbnail_url":"https://a0.muscache.com/im/users/812296/profile_pic/1441223862/original.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"House","property_type_id":2,"public_address":"Stateline, NV, United States","reviews_count":95,"room_type":"Private room","room_type_category":"private_room","scrim_color":"#242426","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/102612709/d8a99f30_original.jpg?aki_policy=small","user":{"first_name":"Kane","has_profile_pic":true,"id":812296,"picture_url":"https://a0.muscache.com/im/users/812296/profile_pic/1441223862/original.jpg?aki_policy=profile_x_medium","smart_name":"Kane","thumbnail_url":"https://a0.muscache.com/im/users/812296/profile_pic/1441223862/original.jpg?aki_policy=profile_small","is_superhost":true},"user_id":812296,"xl_picture_url":"https://a0.muscache.com/im/pictures/102612709/d8a99f30_original.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAADCAIAAADUVFKvAAAAOUlEQVQIHWN08/PjZOGQVVBRlOUTFuZldHV3ZmXnNjWz5uH8+f3HL0ZfZ0tJDXN+Hu5fP3+cOHYcAOYJDgUmforWAAAAAElFTkSuQmCC","picture_urls":["https://a0.muscache.com/im/pictures/102612709/d8a99f30_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612871/dfbb5e82_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102613133/928a4ab5_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674558/dbe17035_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674566/8640218d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102613221/13fe0bb9_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e88c6d92-c602-4c78-abd5-89928ebcbe4f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e32022cb-549e-4a3c-9357-bc5361844574.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612812/819c4361_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674579/d1bcb044_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674662/44c2595a_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102613011/dce68367_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612940/63bcce4d_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612422/623d6bfe_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674608/8a8fc460_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b750c4a6-50c3-4734-8062-10b406e9283d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/264aacfd-fdf7-42b7-817e-5deeb0234fef.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612218/7d6f94b7_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/bc4bf3d1-3c32-42d5-9a58-5b2d0f482941.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1bbd732b-ae8a-4d23-ab2a-2cb20cee3af7.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/102612166/ff999506_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100679545/dc5c4d5f_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1507dec5-ee34-4020-a53d-8b9448538bfe.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100672573/fb1b6320_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/103838033/6599edd5_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100673989/82f56082_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100679946/d0732e02_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100679960/be96a316_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100676714/c5458801_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/100674581/5cacd962_original.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6ce0dcf0-ac18-448f-bd73-92714d626397.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/102612709/d8a99f30_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612871/dfbb5e82_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102613133/928a4ab5_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674558/dbe17035_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674566/8640218d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102613221/13fe0bb9_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e88c6d92-c602-4c78-abd5-89928ebcbe4f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e32022cb-549e-4a3c-9357-bc5361844574.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612812/819c4361_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674579/d1bcb044_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674662/44c2595a_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102613011/dce68367_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612940/63bcce4d_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612422/623d6bfe_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674608/8a8fc460_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b750c4a6-50c3-4734-8062-10b406e9283d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/264aacfd-fdf7-42b7-817e-5deeb0234fef.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612218/7d6f94b7_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/bc4bf3d1-3c32-42d5-9a58-5b2d0f482941.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1bbd732b-ae8a-4d23-ab2a-2cb20cee3af7.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/102612166/ff999506_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100679545/dc5c4d5f_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1507dec5-ee34-4020-a53d-8b9448538bfe.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100672573/fb1b6320_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/103838033/6599edd5_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100673989/82f56082_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100679946/d0732e02_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100679960/be96a316_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100676714/c5458801_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/100674581/5cacd962_original.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6ce0dcf0-ac18-448f-bd73-92714d626397.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":false,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":77,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":77,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":1,"beds":2,"city":"Homewood","distance":null,"extra_host_languages":[],"id":4462010,"instant_bookable":false,"is_business_travel_ready":false,"is_family_preferred":true,"is_new_listing":false,"lat":39.08959221201813,"listing_tags":[],"lng":-120.16118907904391,"localized_city":"Homewood","name":"\"Homewood Hideaway\" 1 Bedroom Flat","neighborhood":"Homewood","person_capacity":4,"picture_count":41,"picture_url":"https://a0.muscache.com/im/pictures/3abd11ec-a80f-48e0-9b89-33927845ebe5.jpg?aki_policy=large","primary_host":{"first_name":"Missy","has_profile_pic":true,"id":13497096,"picture_url":"https://a0.muscache.com/im/pictures/78e9b76f-dc8b-4bed-80d1-14fa250f2a6a.jpg?aki_policy=profile_x_medium","smart_name":"Missy","thumbnail_url":"https://a0.muscache.com/im/pictures/78e9b76f-dc8b-4bed-80d1-14fa250f2a6a.jpg?aki_policy=profile_small","is_superhost":true},"property_type":"Apartment","property_type_id":1,"public_address":"Homewood, CA, United States","reviews_count":43,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#151F28","star_rating":5.0,"thumbnail_url":"https://a0.muscache.com/im/pictures/3abd11ec-a80f-48e0-9b89-33927845ebe5.jpg?aki_policy=small","user":{"first_name":"Missy","has_profile_pic":true,"id":13497096,"picture_url":"https://a0.muscache.com/im/pictures/78e9b76f-dc8b-4bed-80d1-14fa250f2a6a.jpg?aki_policy=profile_x_medium","smart_name":"Missy","thumbnail_url":"https://a0.muscache.com/im/pictures/78e9b76f-dc8b-4bed-80d1-14fa250f2a6a.jpg?aki_policy=profile_small","is_superhost":true},"user_id":13497096,"xl_picture_url":"https://a0.muscache.com/im/pictures/3abd11ec-a80f-48e0-9b89-33927845ebe5.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAECAIAAADJUWIXAAAAS0lEQVQIHQFAAL//Aa3M9AP68Pv8/v758NPNxAGTqs4ICQL9//yclY8BAQIBV3qqCwfy9ubS6Oz05N7dAV1nbPz58f0KH9ja5f306BXuKLnSH1FaAAAAAElFTkSuQmCC","picture_urls":["https://a0.muscache.com/im/pictures/3abd11ec-a80f-48e0-9b89-33927845ebe5.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a16e630f-5706-4275-a641-8f732bd97eb6.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/492a9f30-686d-4c4f-b959-11b971964220.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/5f44b007-fdc2-43ba-8e6b-42656a156572.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6fb44a0e-1408-48d9-bee1-8b5895df0127.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9be8cbfd-cbc2-426a-b4ee-a8858be9b82e.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/d514f52a-7578-4460-9b94-11b3b2f6692d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/171f21e4-478e-4271-bab2-3f7c1cf71761.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e34513f0-59e2-4be0-8b91-fb35ab878410.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/32ca4d29-7980-4a48-8850-bbf3a06eba4b.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1771592d-7b21-430b-b254-76cba31e26d7.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/48f53fca-fa70-4f69-94f2-db3444755959.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9457dc30-be70-4e9b-8f1a-8f8ab85cb2f8.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/bc88d2f4-57a7-4633-93a3-c24dfc9e5c0f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/fdd58a21-6906-469f-b475-7c460c471985.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/1f1dfef0-9698-4f6d-9171-a53ed0b5c15d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/14a1b1da-db0c-47fe-a14a-446391eb7cd1.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/72887936-4e82-428e-a6e8-1b32766e7c86.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b47d8123-ea2a-4630-b5b3-5374ad152bed.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/6a869f81-1778-45ca-b4f4-d184393202fd.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2ff6a608-b23c-446d-8f0e-29ba9cd6c49a.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/15a19bd1-465e-4a9b-8558-23cdfc41db5d.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/7c9541bc-f7f9-4e80-8744-b3437f3186e2.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/27534043-81fa-447a-8cd0-5db4fe9a383f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/cfd536e7-8fe3-4487-9c62-b93af2a2401f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f57b54ed-e737-404f-93a0-f4396b33b779.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/19900ad7-bbbf-4ee7-8c70-b2d3f137f3f2.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a5d759c0-f34a-4b81-a877-ea9c21df7aca.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/708b3170-b011-4140-b149-b2a8cf2ab4b6.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/9875a35b-28e6-4ba0-88e9-68f9db499aff.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/d8b4dfad-8faa-40c0-90db-b82d6af0d533.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f165ab2b-f9d3-4594-8c48-ba7de90a72de.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/2428a953-75b0-468b-9873-bc5544fd1521.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/79260952-2a37-4a14-b308-b88508d2131f.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/b644a1a4-975a-40bc-bc29-3e05e2e9797c.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/a5f44ca9-a9a3-42a8-858a-8fe9df7bfadb.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/098a65fe-3767-4c06-ad96-cd8a494ce236.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e5f6dfb9-d36d-4507-b0ce-99a440319f81.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/e198848b-b147-4946-8110-bd490dbde080.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/7b39cc57-6223-4463-9a21-a8310a5d9bc4.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f4746038-f198-4b15-a51c-19f76ff673e1.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/3abd11ec-a80f-48e0-9b89-33927845ebe5.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a16e630f-5706-4275-a641-8f732bd97eb6.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/492a9f30-686d-4c4f-b959-11b971964220.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/5f44b007-fdc2-43ba-8e6b-42656a156572.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6fb44a0e-1408-48d9-bee1-8b5895df0127.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9be8cbfd-cbc2-426a-b4ee-a8858be9b82e.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/d514f52a-7578-4460-9b94-11b3b2f6692d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/171f21e4-478e-4271-bab2-3f7c1cf71761.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e34513f0-59e2-4be0-8b91-fb35ab878410.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/32ca4d29-7980-4a48-8850-bbf3a06eba4b.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1771592d-7b21-430b-b254-76cba31e26d7.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/48f53fca-fa70-4f69-94f2-db3444755959.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9457dc30-be70-4e9b-8f1a-8f8ab85cb2f8.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/bc88d2f4-57a7-4633-93a3-c24dfc9e5c0f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/fdd58a21-6906-469f-b475-7c460c471985.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/1f1dfef0-9698-4f6d-9171-a53ed0b5c15d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/14a1b1da-db0c-47fe-a14a-446391eb7cd1.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/72887936-4e82-428e-a6e8-1b32766e7c86.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b47d8123-ea2a-4630-b5b3-5374ad152bed.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/6a869f81-1778-45ca-b4f4-d184393202fd.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2ff6a608-b23c-446d-8f0e-29ba9cd6c49a.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/15a19bd1-465e-4a9b-8558-23cdfc41db5d.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/7c9541bc-f7f9-4e80-8744-b3437f3186e2.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/27534043-81fa-447a-8cd0-5db4fe9a383f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/cfd536e7-8fe3-4487-9c62-b93af2a2401f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f57b54ed-e737-404f-93a0-f4396b33b779.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/19900ad7-bbbf-4ee7-8c70-b2d3f137f3f2.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a5d759c0-f34a-4b81-a877-ea9c21df7aca.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/708b3170-b011-4140-b149-b2a8cf2ab4b6.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/9875a35b-28e6-4ba0-88e9-68f9db499aff.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/d8b4dfad-8faa-40c0-90db-b82d6af0d533.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f165ab2b-f9d3-4594-8c48-ba7de90a72de.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/2428a953-75b0-468b-9873-bc5544fd1521.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/79260952-2a37-4a14-b308-b88508d2131f.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/b644a1a4-975a-40bc-bc29-3e05e2e9797c.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/a5f44ca9-a9a3-42a8-858a-8fe9df7bfadb.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/098a65fe-3767-4c06-ad96-cd8a494ce236.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e5f6dfb9-d36d-4507-b0ce-99a440319f81.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/e198848b-b147-4946-8110-bd490dbde080.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/7b39cc57-6223-4463-9a21-a8310a5d9bc4.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f4746038-f198-4b15-a51c-19f76ff673e1.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":false,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":175,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":175,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null},{"listing":{"bathrooms":1.0,"bedrooms":1,"beds":2,"city":"Glenbrook","distance":null,"extra_host_languages":[],"id":17595029,"instant_bookable":false,"is_business_travel_ready":false,"is_family_preferred":false,"is_new_listing":true,"lat":39.03894569920771,"listing_tags":[],"lng":-119.94653670616302,"localized_city":"Glenbrook","name":"The Little Lake Tahoe Cabin","neighborhood":"South Lake Tahoe Region","person_capacity":3,"picture_count":3,"picture_url":"https://a0.muscache.com/im/pictures/db602b4a-2af9-478b-89c0-3f22701570ca.jpg?aki_policy=large","primary_host":{"first_name":"Jennell And Phil","has_profile_pic":true,"id":3180697,"picture_url":"https://a0.muscache.com/im/users/3180697/profile_pic/1386655613/original.jpg?aki_policy=profile_x_medium","smart_name":"Jennell And Phil","thumbnail_url":"https://a0.muscache.com/im/users/3180697/profile_pic/1386655613/original.jpg?aki_policy=profile_small","is_superhost":false},"property_type":"House","property_type_id":2,"public_address":"Glenbrook, NV, United States","reviews_count":0,"room_type":"Entire home/apt","room_type_category":"entire_home","scrim_color":"#161117","star_rating":null,"thumbnail_url":"https://a0.muscache.com/im/pictures/db602b4a-2af9-478b-89c0-3f22701570ca.jpg?aki_policy=small","user":{"first_name":"Jennell And Phil","has_profile_pic":true,"id":3180697,"picture_url":"https://a0.muscache.com/im/users/3180697/profile_pic/1386655613/original.jpg?aki_policy=profile_x_medium","smart_name":"Jennell And Phil","thumbnail_url":"https://a0.muscache.com/im/users/3180697/profile_pic/1386655613/original.jpg?aki_policy=profile_small","is_superhost":false},"user_id":3180697,"xl_picture_url":"https://a0.muscache.com/im/pictures/db602b4a-2af9-478b-89c0-3f22701570ca.jpg?aki_policy=x_large","preview_encoded_png":"iVBORw0KGgoAAAANSUhEUgAAAAUAAAAECAIAAADJUWIXAAAASUlEQVQIHWO0tbITFBbm5OZ9dO+Opp4JY1xcztfPH27fv8vEyKSnq8uYm18nKCzCwsH1/edvFVlRxuLiJlFxUV4eLkbG/ywsrACfXRMg+heI5wAAAABJRU5ErkJggg==","picture_urls":["https://a0.muscache.com/im/pictures/db602b4a-2af9-478b-89c0-3f22701570ca.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/f619fba9-1ef5-4d27-987e-7892ecafb536.jpg?aki_policy=large","https://a0.muscache.com/im/pictures/0cbf55c4-47e9-408f-add6-6bb31049c2b4.jpg?aki_policy=large"],"xl_picture_urls":["https://a0.muscache.com/im/pictures/db602b4a-2af9-478b-89c0-3f22701570ca.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/f619fba9-1ef5-4d27-987e-7892ecafb536.jpg?aki_policy=x_large","https://a0.muscache.com/im/pictures/0cbf55c4-47e9-408f-add6-6bb31049c2b4.jpg?aki_policy=x_large"]},"pricing_quote":{"available":false,"can_instant_book":false,"check_in":null,"check_out":null,"guests":1,"guest_details":{"number_of_adults":1,"number_of_children":0,"number_of_infants":0},"long_term_discount_amount_as_guest":0,"monthly_price_factor":null,"price":null,"rate":{"amount":100,"currency":"USD"},"rate_type":"nightly","rate_with_service_fee":{"amount":100,"currency":"USD"},"weekly_price_factor":null},"viewed_at":null}],"metadata":{"geography":{"accuracy":0,"precision":"unknown","country_code":"US","country":"United States","result_type":"natural_feature","state_short":null,"state":null,"city":null,"lat":39.0968493,"lng":-120.0323507,"place_id":"ChIJUREfuaF4mYARILWv7q8fP4w"},"guidebook":null,"search":{"business_travel_reward_data":{},"business_travel_ready_data":{"filter_criteria":{},"show_btr_upsell":false},"is_business_travel_verified":false,"is_last_minute_eligible":false,"last_minute_show_dist_sort":false,"mobile_session_id":"lELVXCqC","native_currency":"USD","price_type":"nightly","price_range_max_native":1000,"price_range_min_native":10,"search_id":"71a9d44b-f49a-4254-9e80-e26f3bedb88a"},"pagination":{"next_offset":10,"result_count":10},"facets":{"availability":[{"key":"Instant Book","value":"Instant Book","count":253},{"key":"Business Travel Ready","value":"Business Travel Ready","count":107}],"room_type":[{"key":"Entire home/apt","value":"Entire home/apt","count":886},{"key":"Private room","value":"Private room","count":145},{"key":"Shared room","value":"Shared room","count":1}],"hosting_amenity_ids":[{"key":8,"value":"Kitchen","count":951},{"key":3,"value":"Internet","count":635},{"key":1,"value":"TV","count":883},{"key":40,"value":"Essentials","count":914},{"key":41,"value":"Shampoo","count":654},{"key":30,"value":"Heating","count":983},{"key":5,"value":"Air conditioning","count":189},{"key":33,"value":"Washer","count":781},{"key":34,"value":"Dryer","count":773},{"key":9,"value":"Free parking on premises","count":921},{"key":4,"value":"Wireless Internet","count":941},{"key":2,"value":"Cable TV","count":681},{"key":16,"value":"Breakfast","count":82},{"key":12,"value":"Pets allowed","count":231},{"key":31,"value":"Family/kid friendly","count":821},{"key":32,"value":"Suitable for events","count":64},{"key":11,"value":"Smoking allowed","count":7},{"key":6,"value":"Wheelchair accessible","count":68},{"key":21,"value":"Elevator in building","count":122},{"key":27,"value":"Indoor fireplace","count":714},{"key":28,"value":"Buzzer/wireless intercom","count":18},{"key":14,"value":"Doorman","count":24},{"key":7,"value":"Pool","count":394},{"key":25,"value":"Hot tub","count":459},{"key":15,"value":"Gym","count":160},{"key":44,"value":"Hangers","count":658},{"key":46,"value":"Iron","count":505},{"key":45,"value":"Hair dryer","count":573},{"key":47,"value":"Laptop friendly workspace","count":492},{"key":35,"value":"Smoke detector","count":823},{"key":36,"value":"Carbon monoxide detector","count":667},{"key":37,"value":"First aid kit","count":342},{"key":38,"value":"Safety card","count":225},{"key":39,"value":"Fire extinguisher","count":656},{"key":42,"value":"Lock on bedroom door","count":138},{"key":51,"value":"Self Check-In","count":152},{"key":58,"value":"TV","count":989}],"top_amenities":[{"key":4,"value":"Wireless Internet","count":941},{"key":7,"value":"Pool","count":394},{"key":8,"value":"Kitchen","count":951}],"facilities_amenities":[{"key":21,"value":"Elevator in building","count":122},{"key":9,"value":"Free parking on premises","count":921},{"key":15,"value":"Gym","count":160},{"key":25,"value":"Hot tub","count":459},{"key":7,"value":"Pool","count":394},{"key":6,"value":"Wheelchair accessible","count":68}],"house_rules_amenities":[{"key":32,"value":"Suitable for events","count":64},{"key":12,"value":"Pets allowed","count":231},{"key":11,"value":"Smoking allowed","count":7}],"other_amenities":[{"key":8,"value":"Kitchen","count":951},{"key":3,"value":"Internet","count":635},{"key":1,"value":"TV","count":883},{"key":41,"value":"Shampoo","count":654},{"key":30,"value":"Heating","count":983},{"key":5,"value":"Air conditioning","count":189},{"key":33,"value":"Washer","count":781},{"key":34,"value":"Dryer","count":773},{"key":4,"value":"Wireless Internet","count":941},{"key":2,"value":"Cable TV","count":681},{"key":16,"value":"Breakfast","count":82},{"key":31,"value":"Family/kid friendly","count":821},{"key":27,"value":"Indoor fireplace","count":714},{"key":28,"value":"Buzzer/wireless intercom","count":18},{"key":14,"value":"Doorman","count":24},{"key":44,"value":"Hangers","count":658},{"key":46,"value":"Iron","count":505},{"key":45,"value":"Hair dryer","count":573},{"key":47,"value":"Laptop friendly workspace","count":492},{"key":42,"value":"Lock on bedroom door","count":138},{"key":51,"value":"Self Check-In","count":152},{"key":58,"value":"TV","count":989}],"top_other_amenities":[{"key":4,"value":"Wireless Internet","count":941},{"key":1,"value":"TV","count":883},{"key":58,"value":"TV","count":989},{"key":8,"value":"Kitchen","count":951}]},"listing_tags":{},"listings_count":1001,"urgency_commitment":{"message":{"headline":null,"body":null,"contextual_message":null},"message_type":null,"show_percent_listings_left_message":false,"listings_left_as_percent":null},"golden_ticket_urgency_commitment":{"message":{"headline":null,"body":null,"contextual_message":null,"visualization_data":null,"gt_modal_headline":null,"gt_modal_body":null},"message_type":null,"show_percent_listings_left_message":false,"listings_left_as_percent":null},"market_info":{"headline":"","body":"","data":[]},"price_histogram":{"average_price":288,"histogram":[1,0,0,0,0,0,0,1,4,7,9,15,28,37,74,52,46,105,156,75,150,237,56,150,183,139,76,153,78,101,56,85,56,56,34,41,37,19,35,13,17,25,10,22,15,1,18,7,6,115]},"search_feed_items":[],"avg_price_by_room_type":{"ratio":{"Entire home/apt":0.8585271317829457,"Private room":0.14050387596899225,"Shared room":0.0009689922480620155},"avg_price":{"Shared room":100,"Private room":102,"Entire home/apt":156}},"messages":{},"overrides":{},"breadcrumbs":[{"location_name":"United States","canonical_location_name":"United States","type":"country"}],"guided_search":{"avg_gbm_score":108.60932922363281,"avg_usd_price":98.4,"min_stars":4.0,"min_review_count":5.0},"location":{"canonical_location":"Lake Tahoe, United States","display_location":"Lake Tahoe"},"remarketing_ids":[4717031,8211487,7789860,6678897,7901932,15975,13433797,4597468,4104082,347578]}};
+
+
+      /*data.push({
+      		data[0][30].precio = 100.000,
+			data[31][60].precio = 300.000,
+			data[62][90].precio = 500.000;
+      });*/
+      
 /*VALIDACIONES*/
 //Al momento de hacer click, se muentran las validaciones
 $(document).on("ready", inicio);
@@ -20306,17 +22822,14 @@ function initMap(){
 	directionsDisplay.setMap(map);
 		var inicio = (document.getElementById('busqueda')); 
 		var autocompletar = new google.maps.places.Autocomplete(inicio);
-
 	autocomplete.bindTo('bounds', map);      
 }
+$(document).ready(function() {
+	var lugarGuardado = $("#donde").text(localStorage.getItem("lugar"));
+	var llegadaGuardado = $("#llegadaDos").val(localStorage.getItem("llegada"));
+	var salidaGuardado = $("#salidaDos").text(localStorage.getItem("salida"));
+	var personasGuardado = $("#cantidad").text(localStorage.getItem("personas"));
 
-
-		autocompletar.bindTo('bounds', map);          
-*/
-}
-
-	autocomplete.bindTo('bounds', map);  
-	/*var input = (document.getElementById('busqueda'));
-	var autocomplete = new google.maps.places.Autocomplete(input);
-	autocomplete.bindTo('bounds', map); */      
-}
+	
+	
+});
