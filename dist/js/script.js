@@ -20271,6 +20271,7 @@ function validarDatos(){
 	}
 }
 $(document).ready(function(){
+
 	$(".filtros-avanzados").hide();
 	$(".boton-filtro").click(function(event){
   		event.preventDefault();
@@ -20281,8 +20282,12 @@ $(document).ready(function(){
   		event.preventDefault();
 		$(".filtros-avanzados").hide();
 	});
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4b9f7bb7583ece2a9a484467a3f7c32a64fa1152
 })
+
 
 
 function initMap(){
@@ -20300,6 +20305,7 @@ function initMap(){
 	});
 	//input búsqueda resultado
 	directionsDisplay.setMap(map);
+<<<<<<< HEAD
 		var inputResultado = (document.getElementById('donde')); 
 		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
 		autocomplete.bindTo('bounds', map); 
@@ -20314,4 +20320,9 @@ function initMap(){
 		var inputResultado = (document.getElementById('donde')); 
 		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
 		autocomplete.bindTo('bounds', map); 
+=======
+		var inicio = (document.getElementById('busqueda')); 
+		var autocompletar = new google.maps.places.Autocomplete(inicio);
+	autocomplete.bindTo('bounds', map);      
+>>>>>>> 4b9f7bb7583ece2a9a484467a3f7c32a64fa1152
 }

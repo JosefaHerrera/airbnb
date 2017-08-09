@@ -16,6 +16,7 @@ function validarDatos(){
 	}
 }
 $(document).ready(function(){
+
 	$(".filtros-avanzados").hide();
 	$(".boton-filtro").click(function(event){
   		event.preventDefault();
