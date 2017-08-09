@@ -6,7 +6,7 @@ $(document).ready(function() {
 
 		if(datosDonde() && datosHuesped()){
 			window.location.href = "resultado.html";
-			var lugar = $("#donde").val();
+			var lugar = $("#busqueda").val();
 			var llegada = $("#llegada").val();
 			var salida = $("#salida").val();
 			var personas = $("#cantidad").val();
