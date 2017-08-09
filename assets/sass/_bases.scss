@@ -51,13 +51,17 @@
 		.nav-link{
 			ul{
 				display: flex;
-				justify-content: space-around;
-				
+				justify-content: space-around;				
 			}
 		}
 	}
 	#map{
 		height: 500px;
+	}
+	.boton-filtro{
+		border: 1px solid $grey;
+		border-radius: 4px;		
+		text-transform: none;
 	}
 }
 
@@ -70,11 +74,15 @@
 		border-top: 1px solid black;
 		.container{
 			color:#393E44;
-			
-	img{
-		width: 41px;
-	}
-      }
+			img{
+				width: 41px;
+			}
+        }
+			color:#393E44;		
+			img{
+				width: 41px;
+			}
+      	}
 	}
 	.footer-copyright{
     border-top: 1px solid black;
@@ -95,10 +103,6 @@
     padding: 10px 0;
     color: rgba(255,255,255,.8);
     background-color: white;
-	}
-
-
-
 
 .btn{
 	box-shadow: none;
@@ -134,7 +138,6 @@
 	}
 }
 
-
 /*validacion*/
 .errores {
     color: black;
@@ -143,4 +146,3 @@
     margin-top: 1px;
 
 }
-

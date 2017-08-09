@@ -20253,6 +20253,7 @@ if (jQuery) {
   };
 })(jQuery);
 
+<<<<<<< HEAD
 /*! jQuery UI - v1.11.4 - 2016-06-28
 * http://jqueryui.com
 * Includes: core.js, datepicker.js
@@ -22770,6 +22771,7 @@ var data = {
 			data[62][90].precio = 500.000;
       });*/
       
+
 /*VALIDACIONES*/
 //Al momento de hacer click, se muentran las validaciones
 $(document).on("ready", inicio);
@@ -22787,23 +22789,24 @@ function validarDatos(){
 		$("#mensaje1").fadeOut();
 	}
 }
-
 $(document).ready(function(){
+
 	$(".filtros-avanzados").hide();
 	$(".boton-filtro").click(function(event){
   		event.preventDefault();
 		//$(".filtros-avanzados").toggle("slow","display");
 		$(".filtros-avanzados").show();
-		
 	});
 	$(".boton-filtro-cerrar").click(function(event){
   		event.preventDefault();
 		$(".filtros-avanzados").hide();
 	});
+<<<<<<< HEAD
 
-	
-	
+=======
+>>>>>>> 4b9f7bb7583ece2a9a484467a3f7c32a64fa1152
 })
+
 
 
 function initMap(){
@@ -22819,10 +22822,28 @@ function initMap(){
       mapTypeIds: ['roadmap', 'terrain']
     }
 	});
+	//input búsqueda resultado
 	directionsDisplay.setMap(map);
+<<<<<<< HEAD
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
+		var inputHome = (document.getElementById('busqueda')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputHome);
+		autocomplete.bindTo('bounds', map);    
+}
+function initMap(){
+	var directionsService = new google.maps.DirectionsService;
+	var directionsDisplay = new google.maps.DirectionsRenderer;
+
+		var inputResultado = (document.getElementById('donde')); 
+		var autocomplete = new google.maps.places.Autocomplete(inputResultado);
+		autocomplete.bindTo('bounds', map); 
+=======
 		var inicio = (document.getElementById('busqueda')); 
 		var autocompletar = new google.maps.places.Autocomplete(inicio);
 	autocomplete.bindTo('bounds', map);      
+<<<<<<< HEAD
 }
 $(document).ready(function() {
 	var lugarGuardado = $("#donde").text(localStorage.getItem("lugar"));
@@ -22833,3 +22854,4 @@ $(document).ready(function() {
 	
 	
 });
+
